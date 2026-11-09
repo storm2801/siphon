@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================
-#  siphon — a clean terminal downloader
+#  Siphon — a clean terminal downloader
 #  Works with YouTube, Instagram, TikTok, Facebook, X,
 #  Reddit, Vimeo, Twitch, SoundCloud, and everything
 #  yt-dlp supports. Just paste the link.
@@ -521,7 +521,7 @@ EOF
 main() {
   clear 2>/dev/null || true
   printf '\n'
-  printf '  %s%ssiphon%s  %s·  multi-platform downloader%s  %sv%s%s\n' \
+  printf '  %s%sSiphon%s  %s·  multi-platform downloader%s  %sv%s%s\n' \
     "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
   rule
   check_deps
@@ -531,7 +531,7 @@ main() {
     echo
     if ! confirm "¿Descargar otra cosa? [s/N]" "n"; then break; fi
     clear 2>/dev/null || true
-    printf '\n  %s%ssiphon%s  %sv%s%s\n' \
+    printf '\n  %s%sSiphon%s  %sv%s%s\n' \
       "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
     rule
   done
