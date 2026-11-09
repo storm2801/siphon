@@ -1,0 +1,549 @@
+#!/usr/bin/env bash
+# ==============================================================
+#  siphon — a clean terminal downloader
+#  Works with YouTube, Instagram, TikTok, Facebook, X,
+#  Reddit, Vimeo, Twitch, SoundCloud, and everything
+#  yt-dlp supports. Just paste the link.
+#
+#  License: MIT
+#  Requires: yt-dlp, ffmpeg
+# ==============================================================
+
+set -u
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+VERSION="1.1.0"
+DEST="${SIPHON_DEST:-$HOME/Downloads}"
+TMP_INFO="/tmp/siphon_info.$$.json"
+FIFO="/tmp/siphon_fifo.$$"
+_SIPHON_YTDLP_PID=""
+
+C_RESET=$'\033[0m'
+C_BOLD=$'\033[1m'
+C_BLUE=$'\033[38;5;33m'
+C_GREY=$'\033[38;5;245m'
+C_RED=$'\033[31m'
+C_GREEN=$'\033[32m'
+C_YELLOW=$'\033[33m'
+
+rule() { printf '  %s──────────────────────────────────────────────────%s\n' "$C_GREY" "$C_RESET"; }
+kv()   { printf '  %s%-12s%s  %s\n' "$C_GREY" "$1" "$C_RESET" "$2"; }
+ok()   { printf '  %s✓%s  %s\n' "$C_GREEN" "$C_RESET" "$1"; }
+warn() { printf '  %s!%s  %s\n' "$C_YELLOW" "$C_RESET" "$1" >&2; }
+err()  { printf '  %s✗%s  %s\n' "$C_RED" "$C_RESET" "$1"; }
+info() { printf '  %s·%s  %s\n' "$C_GREY" "$C_RESET" "$1"; }
+
+on_interrupt() {
+  trap - INT
+  if [ -n "${_SIPHON_YTDLP_PID:-}" ]; then
+    kill -INT "$_SIPHON_YTDLP_PID" 2>/dev/null || true
+    wait "$_SIPHON_YTDLP_PID" 2>/dev/null || true
+  fi
+  printf '\r\033[K'
+  rm -f "$TMP_INFO" "$FIFO" 2>/dev/null
+  printf '\n  %sCancelado.%s\n' "$C_YELLOW" "$C_RESET"
+  exit 130
+}
+trap on_interrupt INT
+
+check_deps() {
+  local missing=0
+  command -v yt-dlp >/dev/null 2>&1 || { err "Falta yt-dlp"; missing=1; }
+  command -v ffmpeg >/dev/null 2>&1 || { err "Falta ffmpeg"; missing=1; }
+  if [ "$missing" = "1" ]; then
+    printf '\n  %sInstálalos con:%s\n    brew install yt-dlp ffmpeg\n\n' "$C_BOLD" "$C_RESET"
+    exit 1
+  fi
+  mkdir -p "$DEST" || { err "No puedo crear $DEST"; exit 1; }
+}
+
+choose() {
+  local prompt="$1"; shift
+  local opts=("$@")
+  local n=${#opts[@]}
+  printf '\n  %s%s%s\n' "$C_BOLD" "$prompt" "$C_RESET" >&2
+  local i=1 o
+  for o in "${opts[@]}"; do
+    printf '    %s%d)%s  %s\n' "$C_BLUE" "$i" "$C_RESET" "$o" >&2
+    i=$((i + 1))
+  done
+  local ans
+  while :; do
+    printf '    %s>%s ' "$C_BLUE" "$C_RESET" >&2
+    read -r ans || exit 130
+    ans="$(printf '%s' "$ans" | tr -d '[:space:]')"
+    case "$ans" in ''|*[!0-9]*) warn "Escribe un número del 1 al $n"; continue ;; esac
+    if [ "$ans" -ge 1 ] && [ "$ans" -le "$n" ]; then
+      printf '%s' "$ans"
+      return 0
+    fi
+    warn "Escribe un número del 1 al $n"
+  done
+}
+
+ask_url() {
+  local url=""
+  while :; do
+    printf '\n  %sPega la URL del vídeo:%s\n' "$C_BOLD" "$C_RESET" >&2
+    printf '    %s>%s ' "$C_BLUE" "$C_RESET" >&2
+    read -r url || exit 130
+    url="$(printf '%s' "$url" | tr -d '[:space:]')"
+    case "$url" in
+      '') warn "No has pegado nada." ;;
+      http://*|https://*) printf '%s' "$url"; return 0 ;;
+      *) warn "Eso no parece una URL (debe empezar por http)." ;;
+    esac
+  done
+}
+
+detect_platform() {
+  case "$1" in
+    *youtube.com*|*youtu.be*)    printf 'YouTube' ;;
+    *instagram.com*)             printf 'Instagram' ;;
+    *tiktok.com*)                printf 'TikTok' ;;
+    *facebook.com*|*fb.watch*)   printf 'Facebook' ;;
+    *twitter.com*|*x.com*)       printf 'X' ;;
+    *reddit.com*)                printf 'Reddit' ;;
+    *vimeo.com*)                 printf 'Vimeo' ;;
+    *twitch.tv*)                 printf 'Twitch' ;;
+    *soundcloud.com*)            printf 'SoundCloud' ;;
+    *dailymotion.com*)           printf 'Dailymotion' ;;
+    *)                           printf 'Web' ;;
+  esac
+}
+
+fetch_info() {
+  local url="$1"
+  rm -f "$TMP_INFO"
+  yt-dlp -J --flat-playlist --no-warnings "$url" > "$TMP_INFO" 2>/dev/null &
+  local pid=$!
+  _SIPHON_YTDLP_PID=$pid
+
+  local chars='|/-\'
+  local i=0
+  while kill -0 "$pid" 2>/dev/null; do
+    printf '\r    %s%s%s  Obteniendo información…' \
+      "$C_BLUE" "${chars:$((i % 4)):1}" "$C_RESET" >&2
+    sleep 0.1
+    i=$((i+1))
+  done
+
+  wait "$pid"
+  local rc=$?
+  _SIPHON_YTDLP_PID=""
+  printf '\r\033[K' >&2
+
+  if [ "$rc" -ne 0 ] || [ ! -s "$TMP_INFO" ]; then
+    rm -f "$TMP_INFO"
+    return 1
+  fi
+
+  python3 - "$TMP_INFO" <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(1)
+if d.get('_type') == 'playlist':
+    entries = d.get('entries', []) or []
+    print('playlist')
+    print(d.get('title', 'Sin título'))
+    print(len(entries))
+    print('')
+else:
+    heights = sorted({int(f['height']) for f in d.get('formats', []) if f.get('height')}, reverse=True)
+    dur = d.get('duration') or 0
+    print('video')
+    print(d.get('title', 'Sin título'))
+    print(int(dur))
+    print(','.join(map(str, heights)))
+PY
+  local prc=$?
+  rm -f "$TMP_INFO"
+  return $prc
+}
+
+fmt_dur() {
+  local s=$1
+  if [ "$s" -le 0 ]; then printf 'desconocida'; return; fi
+  local h=$((s / 3600)) m=$(((s % 3600) / 60)) sec=$((s % 60))
+  if [ "$h" -gt 0 ]; then printf '%dh %dm %ds' "$h" "$m" "$sec"
+  elif [ "$m" -gt 0 ]; then printf '%dm %ds' "$m" "$sec"
+  else printf '%ds' "$sec"; fi
+}
+
+trunc() {
+  local s="$1" max="${2:-55}"
+  if [ "${#s}" -gt "$max" ]; then printf '%s...' "${s:0:max-3}"; else printf '%s' "$s"; fi
+}
+
+confirm() {
+  local prompt="$1" default="$2" ans
+  printf '\n  %s%s%s ' "$C_BOLD" "$prompt" "$C_RESET"
+  read -r ans || exit 130
+  ans="$(printf '%s' "$ans" | tr -d '[:space:]')"
+  case "${ans:-$default}" in [sSyY]*) return 0 ;; *) return 1 ;; esac
+}
+
+draw_bar() {
+  local pct="$1"
+  local width=30
+  local filled=$((pct * width / 100))
+  local empty=$((width - filled))
+  local fp="" ep="" i=0
+  while [ "$i" -lt "$filled" ]; do fp="${fp}█"; i=$((i+1)); done
+  i=0
+  while [ "$i" -lt "$empty" ]; do ep="${ep}░"; i=$((i+1)); done
+  printf '\r      %s[%s%s%s%s]%s %3d%%' \
+    "$C_GREY" "$C_BLUE" "$fp" "$C_GREY" "$ep" "$C_RESET" "$pct"
+}
+
+run_download() {
+  local url="$1"
+  shift
+  local -a dlargs=("$@")
+
+  rm -f "$FIFO"
+  mkfifo "$FIFO" || { err "No pude crear el FIFO"; return 1; }
+
+  yt-dlp "${dlargs[@]}" "$url" > "$FIFO" 2>&1 &
+  _SIPHON_YTDLP_PID=$!
+
+  local line pct pct_int last_pct=0 current_bar=0
+
+  while IFS= read -r line; do
+    case "$line" in
+      __SIPHON_PROG__*)
+        pct="${line#__SIPHON_PROG__}"
+        pct="${pct//[!0-9.]/}"
+        pct_int="${pct%%.*}"
+        case "$pct_int" in ''|*[!0-9]*) continue ;; esac
+        if [ "$pct_int" -gt 100 ]; then pct_int=100; fi
+        if [ "$pct_int" -ge "$last_pct" ]; then
+          draw_bar "$pct_int"
+          last_pct=$pct_int
+          current_bar=1
+        fi
+        ;;
+      *"Destination:"*)
+        if [ "$current_bar" = "1" ]; then printf '\n'; fi
+        local fullpath="${line#*Destination: }"
+        local fname="${fullpath##*/}"
+        local label
+        case "$fname" in
+          *.m4a|*.mp3|*.opus|*.ogg|*.flac) label="Audio" ;;
+          *.mp4|*.mkv|*.webm)              label="Vídeo" ;;
+          *)                                label="Stream" ;;
+        esac
+        fname="$(trunc "$fname" 55)"
+        printf '    %s▸%s %s %s%s%s\n' \
+          "$C_BLUE" "$C_RESET" "$label" "$C_GREY" "$fname" "$C_RESET"
+        last_pct=0
+        current_bar=0
+        ;;
+      *"has already been downloaded"*)
+        if [ "$current_bar" = "1" ]; then printf '\n'; fi
+        local tmp="${line%% has already*}"
+        tmp="${tmp#*\] }"
+        local fname="${tmp##*/}"
+        fname="$(trunc "$fname" 55)"
+        printf '    %s·%s Ya descargado %s%s%s\n' \
+          "$C_GREY" "$C_RESET" "$C_GREY" "$fname" "$C_RESET"
+        last_pct=0
+        current_bar=0
+        ;;
+      *Merger*)
+        if [ "$current_bar" = "1" ]; then printf '\n'; fi
+        printf '    %s·%s Combinando pistas…\n' "$C_GREY" "$C_RESET"
+        last_pct=0
+        current_bar=0
+        ;;
+      *"ERROR:"*)
+        if [ "$current_bar" = "1" ]; then printf '\n'; fi
+        printf '    %s%s%s\n' "$C_RED" "$line" "$C_RESET" >&2
+        last_pct=0
+        current_bar=0
+        ;;
+      *"WARNING:"*)
+        if [ "$current_bar" = "1" ]; then printf '\n'; fi
+        printf '    %s%s%s\n' "$C_YELLOW" "$line" "$C_RESET"
+        last_pct=0
+        current_bar=0
+        ;;
+      \[*|"")
+        ;;
+      *)
+        ;;
+    esac
+  done < "$FIFO"
+
+  wait "$_SIPHON_YTDLP_PID"
+  local rc=$?
+  _SIPHON_YTDLP_PID=""
+  rm -f "$FIFO"
+  if [ "$current_bar" = "1" ]; then printf '\n'; fi
+  return "$rc"
+}
+
+run_one() {
+  local url
+  url=$(ask_url)
+
+  local platform
+  platform=$(detect_platform "$url")
+
+  local parsed
+  if ! parsed=$(fetch_info "$url"); then
+    err "No pude obtener la información del vídeo."
+    printf '\n'
+    info "Sugerencias:"
+    printf '      yt-dlp --cookies-from-browser safari "%s"\n' "$url"
+    printf '      brew upgrade yt-dlp\n'
+    return 1
+  fi
+
+  local kind vtitle n3 n4
+  { IFS= read -r kind; IFS= read -r vtitle; IFS= read -r n3; IFS= read -r n4; } <<< "$parsed"
+
+  local duration heights count
+  if [ "$kind" = "playlist" ]; then
+    count="$n3"; duration=0; heights=""
+  else
+    duration="$n3"; heights="$n4"; count=1
+  fi
+
+  echo
+  rule
+  kv "Plataforma" "$platform"
+  if [ "$kind" = "playlist" ]; then
+    kv "Lista" "$(trunc "$vtitle" 55)"
+    kv "Vídeos" "$count"
+  else
+    kv "Título" "$(trunc "$vtitle" 55)"
+    kv "Duración" "$(fmt_dur "$duration")"
+    if [ -n "$heights" ]; then
+      kv "Calidades" "$(printf '%s' "$heights" | sed 's/,/p · /g')p"
+    fi
+  fi
+  rule
+
+  local whole_playlist=0
+  if [ "$kind" = "playlist" ] && [ "$count" -gt 1 ]; then
+    if confirm "¿Descargar los $count elementos de la lista? [S/n]" "s"; then
+      whole_playlist=1
+    else
+      warn "Cancelado. Para un elemento suelto, pega su URL directa."
+      return 0
+    fi
+  fi
+
+  local mode
+  mode=$(choose "¿Vídeo o audio?" "Vídeo" "Audio")
+
+  local -a args
+  args=( -P "$DEST" --continue --no-mtime --newline \
+         --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s" \
+         --no-warnings )
+
+  if [ "$whole_playlist" = "1" ]; then
+    args+=( --yes-playlist -o "%(playlist_title)s/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" )
+  else
+    args+=( --no-playlist -o "%(title)s [%(id)s].%(ext)s" )
+  fi
+
+  local label_alcance label_modo label_extra=""
+  if [ "$whole_playlist" = "1" ]; then
+    label_alcance="Lista completa ($count)"
+  else
+    label_alcance="Solo ese elemento"
+  fi
+
+  if [ "$mode" = "1" ]; then
+    local vf height_label=""
+
+    if [ -n "$heights" ]; then
+      local -a HARR
+      IFS=',' read -ra HARR <<< "$heights"
+      if [ "${#HARR[@]}" -eq 1 ]; then
+        vf="bv*[height<=${HARR[0]}]+ba/b[height<=${HARR[0]}]"
+        height_label="${HARR[0]}p"
+        info "Calidad única disponible: ${HARR[0]}p"
+      else
+        local -a qopts=()
+        local first=1 h
+        for h in "${HARR[@]}"; do
+          if [ "$first" = "1" ]; then qopts+=("${h}p  (la mejor)"); first=0
+          else qopts+=("${h}p"); fi
+        done
+        local qsel
+        qsel=$(choose "Calidad de vídeo:" "${qopts[@]}")
+        local idx=1
+        for h in "${HARR[@]}"; do
+          if [ "$idx" = "$qsel" ]; then
+            vf="bv*[height<=$h]+ba/b[height<=$h]"
+            height_label="${h}p"
+            break
+          fi
+          idx=$((idx + 1))
+        done
+      fi
+    else
+      if [ "$platform" = "YouTube" ]; then
+        local qsel
+        qsel=$(choose "Calidad de vídeo:" \
+          "La mejor disponible" "1080p máx." "720p máx." "480p máx.")
+        case "$qsel" in
+          1) vf="bv*+ba/b"; height_label="Mejor disponible" ;;
+          2) vf="bv*[height<=1080]+ba/b[height<=1080]"; height_label="1080p" ;;
+          3) vf="bv*[height<=720]+ba/b[height<=720]"; height_label="720p" ;;
+          4) vf="bv*[height<=480]+ba/b[height<=480]"; height_label="480p" ;;
+        esac
+      else
+        vf="bv*+ba/b"
+        height_label="Mejor disponible"
+      fi
+    fi
+
+    local cont
+    cont=$(choose "Contenedor:" "MP4" "MKV")
+    local cont_ext
+    if [ "$cont" = "1" ]; then cont_ext="mp4"; else cont_ext="mkv"; fi
+
+    local sub
+    sub=$(choose "Subtítulos:" \
+      "Sin subtítulos" \
+      "Español — incrustados" \
+      "Español — archivo .srt" \
+      "Inglés — incrustados" \
+      "Inglés — archivo .srt" \
+      "Español + Inglés — incrustados" \
+      "Español + Inglés — archivo .srt")
+
+    local sub_langs="" sub_embed=0 label_sub="Ninguno"
+    case "$sub" in
+      1) ;;
+      2) sub_langs="es.*,es"; sub_embed=1; label_sub="Español (incrustados)" ;;
+      3) sub_langs="es.*,es"; sub_embed=0; label_sub="Español (.srt)" ;;
+      4) sub_langs="en.*,en"; sub_embed=1; label_sub="Inglés (incrustados)" ;;
+      5) sub_langs="en.*,en"; sub_embed=0; label_sub="Inglés (.srt)" ;;
+      6) sub_langs="es.*,es,en.*,en"; sub_embed=1; label_sub="Español + Inglés (incrustados)" ;;
+      7) sub_langs="es.*,es,en.*,en"; sub_embed=0; label_sub="Español + Inglés (.srt)" ;;
+    esac
+
+    if [ "$sub_embed" -eq 1 ] && [ "$sub" = "6" ] && [ "$cont_ext" = "mp4" ]; then
+      warn "MP4 solo admite una pista → cambio a MKV."
+      cont_ext="mkv"
+    fi
+
+    args+=( -f "$vf" --merge-output-format "$cont_ext" )
+    if [ "$cont_ext" = "mp4" ]; then args+=( -S "ext:mp4:m4a" ); fi
+    if [ -n "$sub_langs" ]; then
+      args+=( --write-subs --sub-langs "$sub_langs" --convert-subs srt )
+      if [ "$sub_embed" -eq 1 ]; then args+=( --embed-subs ); fi
+    fi
+
+    label_modo="Vídeo"
+    label_extra="${height_label} · ${cont_ext} · Subtítulos: ${label_sub}"
+
+  else
+    local af
+    af=$(choose "Formato de audio:" \
+      "MP3  (comprimido, universal)" \
+      "WAV  (sin compresión, ideal para DaVinci)" \
+      "M4A  (AAC original)")
+
+    case "$af" in
+      1) args+=( -x --audio-format mp3 --audio-quality 0 ); label_extra="MP3 alta calidad" ;;
+      2) args+=( -x --audio-format wav --postprocessor-args "ffmpeg:-ar 48000 -ac 2" ); label_extra="WAV 48 kHz estéreo" ;;
+      3) args+=( -x --audio-format m4a ); label_extra="M4A (AAC)" ;;
+    esac
+    label_modo="Audio"
+  fi
+
+  echo
+  rule
+  printf '  %sResumen%s\n' "$C_BOLD" "$C_RESET"
+  rule
+  kv "Plataforma" "$platform"
+  kv "Título" "$(trunc "$vtitle" 55)"
+  kv "Destino" "$DEST"
+  kv "Alcance" "$label_alcance"
+  kv "Modo" "$label_modo"
+  kv "Detalle" "$label_extra"
+  rule
+
+  if ! confirm "¿Descargar ahora? [S/n]" "s"; then
+    warn "Cancelado."
+    return 0
+  fi
+
+  echo
+  run_download "$url" "${args[@]}"
+  local rc=$?
+
+  echo
+  if [ "$rc" -eq 0 ]; then
+    ok "Descarga completada"
+    open "$DEST" 2>/dev/null || true
+  else
+    err "yt-dlp terminó con código $rc"
+    printf '\n'
+    info "Sugerencias:"
+    printf '      yt-dlp --cookies-from-browser safari "%s"\n' "$url"
+    printf '      brew upgrade yt-dlp\n'
+  fi
+  return "$rc"
+}
+
+usage() {
+  cat <<EOF
+siphon ${VERSION} — a clean terminal downloader
+
+Plataformas soportadas (vía yt-dlp):
+  YouTube, Instagram, TikTok, Facebook, X (Twitter),
+  Reddit, Vimeo, Twitch, SoundCloud, Dailymotion y más.
+
+Uso:
+  siphon                Inicia el descargador interactivo
+  siphon --help         Muestra esta ayuda
+  siphon --version      Muestra la versión
+
+Variables de entorno:
+  SIPHON_DEST           Cambia la carpeta de descargas
+                        (por defecto: \$HOME/Downloads)
+
+Requiere:
+  yt-dlp                brew install yt-dlp
+  ffmpeg                brew install ffmpeg
+EOF
+}
+
+main() {
+  clear 2>/dev/null || true
+  printf '\n'
+  printf '  %s%ssiphon%s  %s·  multi-platform downloader%s  %sv%s%s\n' \
+    "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
+  rule
+  check_deps
+
+  while :; do
+    run_one
+    echo
+    if ! confirm "¿Descargar otra cosa? [s/N]" "n"; then break; fi
+    clear 2>/dev/null || true
+    printf '\n  %s%ssiphon%s  %sv%s%s\n' \
+      "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
+    rule
+  done
+  echo
+  ok "Hasta luego."
+}
+
+case "${1:-}" in
+  -h|--help)    usage; exit 0 ;;
+  -v|--version) printf 'siphon %s\n' "$VERSION"; exit 0 ;;
+  "")           main ;;
+  *)            printf 'siphon: opción no reconocida: %s\n' "$1" >&2
+                printf 'Prueba: siphon --help\n' >&2
+                exit 2 ;;
+esac
