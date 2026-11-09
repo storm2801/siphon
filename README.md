@@ -1,5 +1,7 @@
 # siphon
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/) [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/storm2801/siphon) [![Made with bash](https://img.shields.io/badge/made%20with-bash-1f425f.svg)](https://www.gnu.org/software/bash/)
+
 > **Draw the media you want, clean.**
 
 A clean, professional terminal downloader for **macOS**. Paste a link, pick what you want, watch a progress bar. No ads, no popups, no sketchy browser extensions.
