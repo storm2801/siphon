@@ -1,17 +1,16 @@
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:4D6BFE,100:6E8FFF&height=220&section=header&text=Siphon&fontSize=96&fontColor=ffffff&animation=fadeIn&fontAlignY=40&desc=Draw%20the%20media%20you%20want%2C%20clean.&descAlignY=62&descSize=20" alt="Siphon — Draw the media you want, clean." />
+
 <div align="center">
 
-# Siphon
-
-**Draw the media you want, clean.**
-
-A minimal terminal downloader for macOS. Paste a link, pick what you want, watch it land.
+**A minimal terminal downloader for macOS.**  
+Paste a link, pick what you want, watch it land.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/storm2801/siphon/releases)
 [![Made with Bash](https://img.shields.io/badge/made%20with-bash-1f425f.svg)](https://www.gnu.org/software/bash/)
 
-[Install](#install) · [Usage](#usage) · [Features](#features) · [Troubleshooting](#troubleshooting) · [Changelog](CHANGELOG.md)
+[Install](#install) · [Usage](#usage) · [Platforms](#supported-platforms) · [Roadmap](#roadmap) · [Changelog](CHANGELOG.md)
 
 </div>
 
@@ -147,7 +146,7 @@ Follow the prompts. When in doubt, press **Enter**.
 | Flag ↕▾ | Description ↕▾ |
 |---|---|
 | −`--help`, `-h` | Show usage |
-| −`--version`, `-v` | Show version |
+| `--version`, `-v` | Show version |
 ⚙
 
 ### Change the download folder
@@ -169,9 +168,9 @@ source ~/.zshrc
 
 ## Supported platforms
 
-| Platform | Video | Audio | Notes |
+| Platform ↕▾ | Video ↕▾ | Audio ↕▾ | Notes ↕▾ |
 |---|---|---|---|
-| YouTube | ✅ | ✅ | Playlists, subtitles, live |
+| −YouTube | ✅ | ✅ | Playlists, subtitles, live |
 | Instagram | ✅ | ✅ | Reels, posts, stories |
 | TikTok | ✅ | ✅ | Watermark-free available |
 | Facebook | ✅ | ✅ | Public videos |
@@ -181,6 +180,7 @@ source ~/.zshrc
 | Twitch | ✅ | ✅ | VODs and clips |
 | SoundCloud | — | ✅ | Audio-only platform |
 | Dailymotion | ✅ | ✅ | Public videos |
+⚙
 
 Siphon is a frontend for `yt-dlp`. Anything `yt-dlp` supports, Siphon supports. If it's not in the table, try it anyway — it will probably work.
 
@@ -200,12 +200,13 @@ No dependencies beyond what `yt-dlp` already needs. No Python venv, no Node, no 
 
 ## Technologies
 
-| Layer | Tool | Role |
+| Layer ↕▾ | Tool ↕▾ | Role ↕▾ |
 |---|---|---|
-| Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
+| −Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
 | Media processing | [`ffmpeg`](https://ffmpeg.org/) | Merges streams, converts audio, embeds subtitles |
 | Metadata parsing | `python3` (stdlib only) | Parses `yt-dlp -J` JSON output |
 | UI / logic | `bash` 3.2+ | Menus, progress bar, control flow |
+⚙
 
 No `node_modules`. No `pip install`. Just the tools that ship with macOS.
 
@@ -296,55 +297,4 @@ This project is a **tool**, not a service. What you do with it is your responsib
 - Built on top of [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and [`ffmpeg`](https://ffmpeg.org/).
 - Terminal UI inspired by the simplicity of `git`, `tig`, and `lazygit`.
 - Progress bar and menu patterns inspired by Unix tools that get out of the way.
-
-</BDS:create_file>
-<BDS:create_file fileName="CHANGELOG.md">
-
-```markdown
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-## [1.1.0] — 2026-11-09
-
-### Added
-
-- Multi-platform support: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud, Dailymotion
-- Platform detection shown in the summary header
-- `install.sh` script for clone-and-install flow
-- Status badges in README
-- MIT license
-
-### Changed
-
-- Progress bar rewritten: one bar per stream, percentage never decreases
-- Quality detection now queries the actual video before offering choices
-- Ctrl+C kills `yt-dlp` and cleans temp files
-- Banner capitalized to **Siphon**
-
-### Fixed
-
-- URL prompt no longer leaks into the download argument
-- Bash 3.2 compatibility (removed `${var^^}` syntax)
-
-## [1.0.0] — 2026-11-09
-
-### Added
-
-- Initial release
-- YouTube support with real quality detection
-- Video (MP4/MKV) and audio (MP3/WAV/M4A) modes
-- Subtitle embedding and sidecar `.srt` export
-- Playlist support
-- Interactive menu UI with color and clean progress bar
-- Ctrl+C cancellation
-
-[Unreleased]: https://github.com/storm2801/siphon/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/storm2801/siphon/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/storm2801/siphon/releases/tag/v1.0.0
 
