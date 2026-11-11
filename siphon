@@ -16,6 +16,11 @@ VERSION="1.4.0"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
+CFG_MODE="${SIPHON_MODE:-}"
+CFG_QUALITY="${SIPHON_QUALITY:-}"
+CFG_CONTAINER="${SIPHON_CONTAINER:-}"
+CFG_SUBS="${SIPHON_SUBS:-}"
+CFG_AUDIO_FMT="${SIPHON_AUDIO:-}"
 _SIPHON_YTDLP_PID=""
 CFG_MODE=""
 CFG_QUALITY=""
@@ -64,6 +69,7 @@ check_deps() {
 }
 
 choose() {
+  case "$1" in *Formato*) [ -n "$SIPHON_AUDIO" ] && { printf "%s" "$SIPHON_AUDIO"; return 0; } ;; *Contenedor*) [ -n "$SIPHON_CONTAINER" ] && { printf "%s" "$SIPHON_CONTAINER"; return 0; } ;; *Sub*) [ -n "$SIPHON_SUBS" ] && { printf "%s" "$SIPHON_SUBS"; return 0; } ;; *audio*) [ -n "$SIPHON_MODE" ] && { printf "%s" "$SIPHON_MODE"; return 0; } ;; esac
   local prompt="$1"; shift
   local opts=("$@")
   local n=${#opts[@]}
