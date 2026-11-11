@@ -81,6 +81,7 @@ Siphon is the fourth option: a **thin, readable bash wrapper** around `yt-dlp` t
 | **Clean progress bar** | One line per stream, fills smoothly. Not a wall of `[download] 5.3% of ...` noise. |
 | **Ctrl+C cancels** | At any step. Kills `yt-dlp`, cleans temp files, exits cleanly. |
 | **DaVinci-friendly audio** | WAV 48 kHz stereo, ready for a timeline with zero conversion. |
+| **Batch mode** | `siphon --batch urls.txt` downloads a whole list. |
 | **Zero config** | One command, interactive menus, no flags to remember. |
 
 ---
@@ -145,9 +146,21 @@ Follow the prompts. When in doubt, press **Enter**.
 
 | Flag  | Description  |
 |---|---|
-| -`--help`, `-h` | Show usage |
+| `--help`, `-h` | Show usage |
 | `--version`, `-v` | Show version |
+| `--batch FILE` | Download every URL in FILE |
 
+
+
+### Batch mode
+
+Download every URL in a text file:
+
+```bash
+siphon --batch urls.txt
+```
+
+One URL per line. Blank lines and lines starting with `#` are ignored.
 
 ### Change the download folder
 
@@ -170,7 +183,7 @@ source ~/.zshrc
 
 | Platform  | Video  | Audio  | Notes  |
 |---|---|---|---|
-| -YouTube | ✅ | ✅ | Playlists, subtitles, live |
+| YouTube | ✅ | ✅ | Playlists, subtitles, live |
 | Instagram | ✅ | ✅ | Reels, posts, stories |
 | TikTok | ✅ | ✅ | Watermark-free available |
 | Facebook | ✅ | ✅ | Public videos |
@@ -202,7 +215,7 @@ No dependencies beyond what `yt-dlp` already needs. No Python venv, no Node, no 
 
 | Layer  | Tool  | Role  |
 |---|---|---|
-| -Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
+| Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
 | Media processing | [`ffmpeg`](https://ffmpeg.org/) | Merges streams, converts audio, embeds subtitles |
 | Metadata parsing | `python3` (stdlib only) | Parses `yt-dlp -J` JSON output |
 | UI / logic | `bash` 3.2+ | Menus, progress bar, control flow |
@@ -216,7 +229,7 @@ No `node_modules`. No `pip install`. Just the tools that ship with macOS.
 
 | Symptom  | Fix  |
 |---|---|
-| -`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
+| `Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
 | "Format not available" or only 720p | `brew upgrade yt-dlp` |
 | Download stalls mid-way | Re-run `siphon`: `--continue` resumes |
 | `siphon: command not found` | `source ~/.zshrc` or open a fresh terminal |
@@ -250,7 +263,7 @@ Siphon is a tool, not a service. Download only content you own, content under a 
 Because quality, format, and subtitles depend entirely on the video and what you plan to do with it. Siphon gets you exactly the file you want, not a 4K WebM you'll spend five minutes converting.
 
 **Can I script it?**
-Not yet — interactive menus are the whole point. Batch mode and non-interactive flags are on the roadmap.
+Partially. Use `siphon --batch urls.txt` for hands-off downloads. Batch mode and non-interactive flags are on the roadmap.
 
 **Does it work on Linux?**
 Not officially tested, but the code is portable bash and only depends on `yt-dlp` + `ffmpeg`. It will probably work. PRs welcome.
