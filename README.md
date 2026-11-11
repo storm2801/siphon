@@ -7,7 +7,7 @@ Paste a link, pick what you want, watch it land.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/storm2801/siphon/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/storm2801/siphon/releases)
 [![Made with Bash](https://img.shields.io/badge/made%20with-bash-1f425f.svg)](https://www.gnu.org/software/bash/)
 
 [Install](#install) · [Usage](#usage) · [Platforms](#supported-platforms) · [Roadmap](#roadmap) · [Changelog](CHANGELOG.md)
@@ -23,7 +23,7 @@ Paste a link, pick what you want, watch it land.
 Siphon  ·  multi-platform downloader  v1.1.0
 ─────────────────────────────────────────────
 
-Pega la URL del vídeo:
+Pega la URL del vídeo: [Enter = portapapeles]
 
 > https://youtu.be/dQw4w9WgXcQ
 
@@ -46,9 +46,9 @@ Calidades     2160p · 1440p · 1080p · 720p · 480p
 ¿Descargar ahora? [S/n] s
 
 ▸ Vídeo  Artist — Song Title [dQw4w9WgXcQ].f401.mp4
-[████████████████████████████████] 100%
+[████████████████████████████████] 100%  ·  12.4 MB/s  ·  ETA 00:00
 ▸ Audio  Artist — Song Title [dQw4w9WgXcQ].f140.m4a
-[████████████████░░░░░░░░░░░░░░░░]  48%
+[████████████████░░░░░░░░░░░░░░░░]  48%  ·  8.42 MB/s  ·  ETA 00:47
 · Combinando pistas…
 
 ✓  Descarga completada
@@ -230,18 +230,14 @@ For anything else, open an [issue](https://github.com/storm2801/siphon/issues) w
 
 ## Roadmap
 
-- ☑  
-**v1.0** — YouTube support, quality detection, subtitle control
-- ☑  
-**v1.1** — Multi-platform: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud
-- □  
-**v1.2** — Batch mode: read URLs from a file
-- □  
-**v1.3** — Config file (`~/.siphonrc`) to remember preferences
-- □  
-**v2.0** — Linux support
+- [x] **v1.0** — YouTube support, quality detection, subtitle control
+- [x] **v1.1** — Multi-platform: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud
+- [x] **v1.2** — Clipboard fallback, ETA and speed in progress bar
+- [ ] **v1.3** — Batch mode: read URLs from a file
+- [ ] **v1.4** — Config file (`~/.siphonrc`) to remember preferences
+- [ ] **v2.0** — Linux support
 
-See CHANGELOG.md for details.
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

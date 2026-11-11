@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-11-11
+
+### Added
+
+- Clipboard fallback: pressing Enter on the URL prompt pulls the URL from the clipboard (`pbpaste`)
+- ETA and transfer speed shown next to the percentage in the progress bar
+
+### Changed
+
+- Progress bar clears trailing characters when speed or ETA become unknown
+- URL prompt hint now reads `[Enter = portapapeles]`
+
 ## [1.1.0] — 2026-11-09
 
 ### Added
@@ -41,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive menu UI with color and clean progress bar
 - Ctrl+C cancellation
 
-[Unreleased]: https://github.com/storm2801/siphon/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/storm2801/siphon/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/storm2801/siphon/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/storm2801/siphon/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/storm2801/siphon/releases/tag/v1.0.0

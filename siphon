@@ -12,7 +12,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="1.1.0"
+VERSION="1.2.0"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -84,12 +84,28 @@ choose() {
 ask_url() {
   local url=""
   while :; do
-    printf '\n  %sPega la URL del vídeo:%s\n' "$C_BOLD" "$C_RESET" >&2
+    printf '\n  %sPega la URL del vídeo:%s %s[Enter = portapapeles]%s\n' \
+      "$C_BOLD" "$C_RESET" "$C_GREY" "$C_RESET" >&2
     printf '    %s>%s ' "$C_BLUE" "$C_RESET" >&2
     read -r url || exit 130
     url="$(printf '%s' "$url" | tr -d '[:space:]')"
+
+    if [ -z "$url" ]; then
+      local clip=""
+      clip="$(pbpaste 2>/dev/null | tr -d '[:space:]')"
+      case "$clip" in
+        http://*|https://*)
+          printf '    %s✓%s  Tomada del portapapeles: %s%s%s\n' \
+            "$C_GREEN" "$C_RESET" "$C_GREY" "$(trunc "$clip" 55)" "$C_RESET" >&2
+          printf '%s' "$clip"
+          return 0
+          ;;
+      esac
+      warn "No has pegado nada y el portapapeles no contiene una URL."
+      continue
+    fi
+
     case "$url" in
-      '') warn "No has pegado nada." ;;
       http://*|https://*) printf '%s' "$url"; return 0 ;;
       *) warn "Eso no parece una URL (debe empezar por http)." ;;
     esac
@@ -187,6 +203,8 @@ confirm() {
 
 draw_bar() {
   local pct="$1"
+  local speed="${2:-}"
+  local eta="${3:-}"
   local width=30
   local filled=$((pct * width / 100))
   local empty=$((width - filled))
@@ -194,8 +212,18 @@ draw_bar() {
   while [ "$i" -lt "$filled" ]; do fp="${fp}█"; i=$((i+1)); done
   i=0
   while [ "$i" -lt "$empty" ]; do ep="${ep}░"; i=$((i+1)); done
-  printf '\r      %s[%s%s%s%s]%s %3d%%' \
-    "$C_GREY" "$C_BLUE" "$fp" "$C_GREY" "$ep" "$C_RESET" "$pct"
+
+  speed="${speed// /}"
+  eta="${eta// /}"
+  case "$speed" in ""|N/A*|Unknown*|*%*) speed="" ;; esac
+  case "$eta"   in ""|N/A*|Unknown*|*%*) eta=""   ;; esac
+
+  local extra=""
+  if [ -n "$speed" ]; then extra="  ·  ${speed}"; fi
+  if [ -n "$eta" ]; then extra="${extra}  ·  ETA ${eta}"; fi
+
+  printf '\r\033[K      %s[%s%s%s%s]%s %3d%%%s' \
+    "$C_GREY" "$C_BLUE" "$fp" "$C_GREY" "$ep" "$C_RESET" "$pct" "$extra"
 }
 
 run_download() {
@@ -214,13 +242,18 @@ run_download() {
   while IFS= read -r line; do
     case "$line" in
       __SIPHON_PROG__*)
-        pct="${line#__SIPHON_PROG__}"
-        pct="${pct//[!0-9.]/}"
-        pct_int="${pct%%.*}"
+        local data="${line#__SIPHON_PROG__}"
+        local raw_pct speed eta
+        raw_pct="${data%%|*}"
+        data="${data#*|}"
+        speed="${data%%|*}"
+        eta="${data#*|}"
+        raw_pct="${raw_pct//[!0-9.]/}"
+        pct_int="${raw_pct%%.*}"
         case "$pct_int" in ''|*[!0-9]*) continue ;; esac
         if [ "$pct_int" -gt 100 ]; then pct_int=100; fi
         if [ "$pct_int" -ge "$last_pct" ]; then
-          draw_bar "$pct_int"
+          draw_bar "$pct_int" "$speed" "$eta"
           last_pct=$pct_int
           current_bar=1
         fi
@@ -342,7 +375,7 @@ run_one() {
 
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
-         --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s" \
+         --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings )
 
   if [ "$whole_playlist" = "1" ]; then
