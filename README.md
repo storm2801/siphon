@@ -128,7 +128,7 @@ source ~/.zshrc
 
 ```
 siphon --version
-# → siphon 1.1.0
+# → siphon 1.3.0
 ```
 
 ---
@@ -143,11 +143,11 @@ Follow the prompts. When in doubt, press **Enter**.
 
 ### Flags
 
-| Flag ↕▾ | Description ↕▾ |
+| Flag  | Description  |
 |---|---|
-| −`--help`, `-h` | Show usage |
+| -`--help`, `-h` | Show usage |
 | `--version`, `-v` | Show version |
-⚙
+
 
 ### Change the download folder
 
@@ -168,9 +168,9 @@ source ~/.zshrc
 
 ## Supported platforms
 
-| Platform ↕▾ | Video ↕▾ | Audio ↕▾ | Notes ↕▾ |
+| Platform  | Video  | Audio  | Notes  |
 |---|---|---|---|
-| −YouTube | ✅ | ✅ | Playlists, subtitles, live |
+| -YouTube | ✅ | ✅ | Playlists, subtitles, live |
 | Instagram | ✅ | ✅ | Reels, posts, stories |
 | TikTok | ✅ | ✅ | Watermark-free available |
 | Facebook | ✅ | ✅ | Public videos |
@@ -180,7 +180,7 @@ source ~/.zshrc
 | Twitch | ✅ | ✅ | VODs and clips |
 | SoundCloud | — | ✅ | Audio-only platform |
 | Dailymotion | ✅ | ✅ | Public videos |
-⚙
+
 
 Siphon is a frontend for `yt-dlp`. Anything `yt-dlp` supports, Siphon supports. If it's not in the table, try it anyway — it will probably work.
 
@@ -200,13 +200,13 @@ No dependencies beyond what `yt-dlp` already needs. No Python venv, no Node, no 
 
 ## Technologies
 
-| Layer ↕▾ | Tool ↕▾ | Role ↕▾ |
+| Layer  | Tool  | Role  |
 |---|---|---|
-| −Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
+| -Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
 | Media processing | [`ffmpeg`](https://ffmpeg.org/) | Merges streams, converts audio, embeds subtitles |
 | Metadata parsing | `python3` (stdlib only) | Parses `yt-dlp -J` JSON output |
 | UI / logic | `bash` 3.2+ | Menus, progress bar, control flow |
-⚙
+
 
 No `node_modules`. No `pip install`. Just the tools that ship with macOS.
 
@@ -214,15 +214,15 @@ No `node_modules`. No `pip install`. Just the tools that ship with macOS.
 
 ## Troubleshooting
 
-| Symptom ↕▾ | Fix ↕▾ |
+| Symptom  | Fix  |
 |---|---|
-| −`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
+| -`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
 | "Format not available" or only 720p | `brew upgrade yt-dlp` |
 | Download stalls mid-way | Re-run `siphon`: `--continue` resumes |
 | `siphon: command not found` | `source ~/.zshrc` or open a fresh terminal |
 | Video imports to DaVinci with no audio | Choose **WAV** in the audio menu |
 | macOS blocks the script | System Settings → Privacy & Security → **Allow anyway** |
-⚙
+
 
 For anything else, open an [issue](https://github.com/storm2801/siphon/issues) with the full `yt-dlp` output.
 
@@ -284,7 +284,7 @@ This project is a **tool**, not a service. What you do with it is your responsib
 
 ## License
 
-[MIT](https://license/) © 2026 [storm2801](https://github.com/storm2801)
+[MIT](LICENSE) © 2026 [storm2801](https://github.com/storm2801)
 
 ---
 
