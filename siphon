@@ -12,7 +12,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="1.2.0"
+VERSION="1.3.0"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -528,6 +528,120 @@ run_one() {
   return "$rc"
 }
 
+batch_mode() {
+  local file="$1"
+
+  if [ ! -f "$file" ]; then
+    err "No existe el archivo: $file"
+    exit 1
+  fi
+
+  local -a urls=()
+  local raw
+  while IFS= read -r raw || [ -n "$raw" ]; do
+    raw="$(printf '%s' "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    case "$raw" in
+      ''|'#'*) continue ;;
+      http://*|https://*) urls+=("$raw") ;;
+      *) warn "Ignorada (no es URL): $(trunc "$raw" 60)" ;;
+    esac
+  done < "$file"
+
+  local total=${#urls[@]}
+  if [ "$total" -eq 0 ]; then
+    err "El archivo no contiene URLs válidas."
+    exit 1
+  fi
+
+  echo
+  rule
+  kv "Modo" "Batch"
+  kv "Archivo" "$(trunc "$file" 55)"
+  kv "URLs" "$total"
+  kv "Destino" "$DEST"
+  rule
+
+  local mode
+  mode=$(choose "¿Vídeo o audio?" "Vídeo" "Audio")
+
+  local -a args
+  args=( -P "$DEST" --continue --no-mtime --newline \
+         --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
+         --no-warnings --no-playlist -o "%(title)s [%(id)s].%(ext)s" )
+
+  local label_modo
+  if [ "$mode" = "1" ]; then
+    local qsel vf cont cont_ext
+    qsel=$(choose "Calidad máxima:" "La mejor disponible" "1080p" "720p" "480p")
+    case "$qsel" in
+      1) vf="bv*+ba/b" ;;
+      2) vf="bv*[height<=1080]+ba/b[height<=1080]" ;;
+      3) vf="bv*[height<=720]+ba/b[height<=720]" ;;
+      4) vf="bv*[height<=480]+ba/b[height<=480]" ;;
+    esac
+    cont=$(choose "Contenedor:" "MP4" "MKV")
+    if [ "$cont" = "1" ]; then cont_ext="mp4"; else cont_ext="mkv"; fi
+    args+=( -f "$vf" --merge-output-format "$cont_ext" )
+    if [ "$cont_ext" = "mp4" ]; then args+=( -S "ext:mp4:m4a" ); fi
+    label_modo="Vídeo · ${cont_ext}"
+  else
+    local af
+    af=$(choose "Formato de audio:" \
+      "MP3  (comprimido, universal)" \
+      "WAV  (sin compresión, ideal para DaVinci)" \
+      "M4A  (AAC original)")
+    case "$af" in
+      1) args+=( -x --audio-format mp3 --audio-quality 0 ); label_modo="Audio · MP3" ;;
+      2) args+=( -x --audio-format wav --postprocessor-args "ffmpeg:-ar 48000 -ac 2" ); label_modo="Audio · WAV 48 kHz" ;;
+      3) args+=( -x --audio-format m4a ); label_modo="Audio · M4A" ;;
+    esac
+  fi
+
+  if ! confirm "¿Descargar las $total URLs? [S/n]" "s"; then
+    warn "Cancelado."
+    exit 0
+  fi
+
+  local ok_count=0 fail_count=0 i=1 url
+  local -a failed=()
+
+  echo
+  rule
+  for url in "${urls[@]}"; do
+    printf '\n  %s[%d/%d]%s %s%s%s\n' \
+      "$C_BLUE" "$i" "$total" "$C_RESET" "$C_GREY" "$(trunc "$url" 60)" "$C_RESET"
+    if run_download "$url" "${args[@]}"; then
+      ok_count=$((ok_count + 1))
+    else
+      fail_count=$((fail_count + 1))
+      failed+=("$url")
+    fi
+    i=$((i + 1))
+  done
+
+  echo
+  rule
+  printf '  %sResumen final%s\n' "$C_BOLD" "$C_RESET"
+  rule
+  kv "Modo" "$label_modo"
+  kv "Completadas" "$ok_count / $total"
+  kv "Fallidas" "$fail_count / $total"
+  if [ "$fail_count" -gt 0 ]; then
+    printf '\n  %sURLs fallidas:%s\n' "$C_BOLD" "$C_RESET"
+    for url in "${failed[@]}"; do
+      printf '    %s·%s %s\n' "$C_RED" "$C_RESET" "$(trunc "$url" 70)"
+    done
+  fi
+  rule
+
+  if [ "$fail_count" -eq 0 ]; then
+    ok "Todas las descargas completadas"
+    open "$DEST" 2>/dev/null || true
+  else
+    warn "$fail_count de $total fallaron"
+  fi
+}
+
 usage() {
   cat <<EOF
 siphon ${VERSION} — a clean terminal downloader
@@ -538,6 +652,7 @@ Plataformas soportadas (vía yt-dlp):
 
 Uso:
   siphon                Inicia el descargador interactivo
+  siphon --batch FILE   Descarga URLs de un archivo
   siphon --help         Muestra esta ayuda
   siphon --version      Muestra la versión
 
@@ -575,6 +690,9 @@ main() {
 case "${1:-}" in
   -h|--help)    usage; exit 0 ;;
   -v|--version) printf 'siphon %s\n' "$VERSION"; exit 0 ;;
+  --batch)
+    [ -z "${2:-}" ] && { printf "Uso: siphon --batch <archivo>\n" >&2; exit 2; }
+    check_deps; batch_mode "$2"; exit 0 ;;
   "")           main ;;
   *)            printf 'siphon: opción no reconocida: %s\n' "$1" >&2
                 printf 'Prueba: siphon --help\n' >&2

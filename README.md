@@ -7,7 +7,7 @@ Paste a link, pick what you want, watch it land.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/storm2801/siphon/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/storm2801/siphon/releases)
 [![Made with Bash](https://img.shields.io/badge/made%20with-bash-1f425f.svg)](https://www.gnu.org/software/bash/)
 
 [Install](#install) · [Usage](#usage) · [Platforms](#supported-platforms) · [Roadmap](#roadmap) · [Changelog](CHANGELOG.md)
@@ -20,7 +20,7 @@ Paste a link, pick what you want, watch it land.
 
 ```
 
-Siphon  ·  multi-platform downloader  v1.1.0
+Siphon  ·  multi-platform downloader  v1.3.0
 ─────────────────────────────────────────────
 
 Pega la URL del vídeo: [Enter = portapapeles]
@@ -233,7 +233,7 @@ For anything else, open an [issue](https://github.com/storm2801/siphon/issues) w
 - [x] **v1.0** — YouTube support, quality detection, subtitle control
 - [x] **v1.1** — Multi-platform: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud
 - [x] **v1.2** — Clipboard fallback, ETA and speed in progress bar
-- [ ] **v1.3** — Batch mode: read URLs from a file
+- [x] **v1.3** — Batch mode: `siphon --batch urls.txt`
 - [ ] **v1.4** — Config file (`~/.siphonrc`) to remember preferences
 - [ ] **v2.0** — Linux support
 

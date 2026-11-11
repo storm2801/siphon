@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-11-11
+
+### Added
+
+- Batch mode: `siphon --batch urls.txt` downloads every URL in a text file
+
 ## [1.2.0] — 2026-11-11
 
 ### Added
@@ -53,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive menu UI with color and clean progress bar
 - Ctrl+C cancellation
 
-[Unreleased]: https://github.com/storm2801/siphon/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/storm2801/siphon/compare/v1.3.0...HEAD
 [1.2.0]: https://github.com/storm2801/siphon/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/storm2801/siphon/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/storm2801/siphon/releases/tag/v1.0.0
