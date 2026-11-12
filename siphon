@@ -400,7 +400,16 @@ run_one() {
   if [ "$mode" = "1" ]; then
     local vf height_label=""
 
-    if [ -n "$heights" ]; then
+    if [ -n "$CFG_QUALITY" ]; then
+      case "$CFG_QUALITY" in
+        best) vf="bv*+ba/b"; height_label="Mejor disponible" ;;
+        1080) vf="bv*[height<=1080]+ba/b[height<=1080]"; height_label="1080p" ;;
+        720)  vf="bv*[height<=720]+ba/b[height<=720]";   height_label="720p" ;;
+        480)  vf="bv*[height<=480]+ba/b[height<=480]";   height_label="480p" ;;
+        *)    vf="bv*+ba/b"; height_label="Mejor disponible" ;;
+      esac
+      info "Calidad fijada por config: $CFG_QUALITY"
+    elif [ -n "$heights" ]; then
       local -a HARR
       IFS=',' read -ra HARR <<< "$heights"
       if [ "${#HARR[@]}" -eq 1 ]; then
@@ -648,6 +657,7 @@ batch_mode() {
   fi
 }
 
+# shellcheck disable=SC2088
 load_config() {
   local f="$HOME/.siphonrc"
   [ -f "$f" ] || return 0
@@ -670,8 +680,7 @@ load_config() {
   done < "$f"
   case "$DEST" in
     "~") DEST="$HOME" ;;
-    # shellcheck disable=SC2088
-    "~/"*) DEST="$HOME/${DEST#\~/}" ;;
+        "~/"*) DEST="$HOME/${DEST:2}" ;;
   esac
 }
 
@@ -724,6 +733,8 @@ Plataformas soportadas (vía yt-dlp):
 Uso:
   siphon                Inicia el descargador interactivo
   siphon --batch FILE   Descarga URLs de un archivo
+  siphon --init         Crea ~/.siphonrc de ejemplo
+  siphon --show-config  Muestra la configuracion efectiva
   siphon --help         Muestra esta ayuda
   siphon --version      Muestra la versión
 
@@ -762,6 +773,8 @@ load_config
 
 case "${1:-}" in
   -h|--help)    usage; exit 0 ;;
+  --init)        init_config; exit $? ;;
+  --show-config) show_config; exit 0 ;;
   -v|--version) printf 'siphon %s\n' "$VERSION"; exit 0 ;;
   --batch)
     [ -z "${2:-}" ] && { printf "Uso: siphon --batch <archivo>\n" >&2; exit 2; }

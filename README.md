@@ -130,7 +130,7 @@ source ~/.zshrc
 
 ```
 siphon --version
-# → siphon 1.3.0
+# → siphon 1.4.0
 ```
 
 ---
@@ -150,6 +150,8 @@ Follow the prompts. When in doubt, press **Enter**.
 | `--help`, `-h` | Show usage |
 | `--version`, `-v` | Show version |
 | `--batch FILE` | Download every URL in FILE |
+| `--init` | Create a sample `~/.siphonrc` |
+| `--show-config` | Show effective configuration |
 
 
 
@@ -162,6 +164,24 @@ siphon --batch urls.txt
 ```
 
 One URL per line. Blank lines and lines starting with `#` are ignored.
+
+
+### Environment variables
+
+Skip any prompt by setting an environment variable:
+
+```bash
+SIPHON_MODE=2 SIPHON_AUDIO=1 siphon
+```
+
+| Variable | Values |
+|---|---|
+| `SIPHON_DEST` | Any writable path |
+| `SIPHON_MODE` | `1` video, `2` audio |
+| `SIPHON_QUALITY` | `best`, `1080`, `720`, `480` |
+| `SIPHON_CONTAINER` | `1` mp4, `2` mkv |
+| `SIPHON_SUBS` | `1`–`7` |
+| `SIPHON_AUDIO` | `1` mp3, `2` wav, `3` m4a |
 
 ### Change the download folder
 
@@ -248,7 +268,7 @@ For anything else, open an [issue](https://github.com/storm2801/siphon/issues) w
 - [x] **v1.1** — Multi-platform: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud
 - [x] **v1.2** — Clipboard fallback, ETA and speed in progress bar
 - [x] **v1.3** — Batch mode: `siphon --batch urls.txt`
-- [ ] **v1.4** — Config file (`~/.siphonrc`) to remember preferences
+- [x] **v1.4** — Env vars, config file, ShellCheck CI
 - [ ] **v2.0** — Linux support
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
