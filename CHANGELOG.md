@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-12
+
+### Added
+
+- Siphon.command - double-click launcher for macOS
+- install.sh now supports curl | bash installation
+- AUTHORS.md with creator credit
+- CONTRIBUTING.md with contribution guidelines
+- GitHub issue templates for bug reports and feature requests
+
+### Changed
+
+- README restructured: quick start first, advanced usage at the bottom
+- Version bumped to 1.5.0
+
 ## [1.4.0] — 2026-11-11
 
 ### Added
@@ -69,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive menu UI with color and clean progress bar
 - Ctrl+C cancellation
 
-[Unreleased]: https://github.com/storm2801/siphon/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/storm2801/siphon/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/storm2801/siphon/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/storm2801/siphon/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/storm2801/siphon/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/storm2801/siphon/compare/v1.1.0...v1.2.0
