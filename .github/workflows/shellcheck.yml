@@ -16,4 +16,4 @@ jobs:
         uses: ludeeus/action-shellcheck@2.0.0
         with:
           additional_files: "siphon install.sh"
-          severity: warning
+          severity: error
