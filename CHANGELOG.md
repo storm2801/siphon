@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-11-11
+
+### Added
+
+- Environment variables: SIPHON_MODE, SIPHON_QUALITY, SIPHON_CONTAINER, SIPHON_SUBS, SIPHON_AUDIO
+- Prompts are skipped automatically when the matching env var is set
+- GitHub Actions ShellCheck workflow on every push
+- ShellCheck badge in README
+
+
 ## [1.3.0] — 2026-11-11
 
 ### Added
@@ -59,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive menu UI with color and clean progress bar
 - Ctrl+C cancellation
 
-[Unreleased]: https://github.com/storm2801/siphon/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/storm2801/siphon/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/storm2801/siphon/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/storm2801/siphon/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/storm2801/siphon/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/storm2801/siphon/compare/v1.0.0...v1.1.0

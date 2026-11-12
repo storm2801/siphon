@@ -7,8 +7,9 @@ Paste a link, pick what you want, watch it land.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/storm2801/siphon/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/storm2801/siphon/releases)
 [![Made with Bash](https://img.shields.io/badge/made%20with-bash-1f425f.svg)](https://www.gnu.org/software/bash/)
+[![ShellCheck](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml)
 
 [Install](#install) · [Usage](#usage) · [Platforms](#supported-platforms) · [Roadmap](#roadmap) · [Changelog](CHANGELOG.md)
 
@@ -20,7 +21,7 @@ Paste a link, pick what you want, watch it land.
 
 ```
 
-Siphon  ·  multi-platform downloader  v1.3.0
+Siphon  ·  multi-platform downloader  v1.4.0
 ─────────────────────────────────────────────
 
 Pega la URL del vídeo: [Enter = portapapeles]
