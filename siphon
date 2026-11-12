@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1003  # spinner chars false positive
 # ==============================================================
 #  Siphon — a clean terminal downloader
 #  Works with YouTube, Instagram, TikTok, Facebook, X,
