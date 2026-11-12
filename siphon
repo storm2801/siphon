@@ -22,12 +22,6 @@ CFG_CONTAINER="${SIPHON_CONTAINER:-}"
 CFG_SUBS="${SIPHON_SUBS:-}"
 CFG_AUDIO_FMT="${SIPHON_AUDIO:-}"
 _SIPHON_YTDLP_PID=""
-CFG_MODE=""
-CFG_QUALITY=""
-CFG_CONTAINER=""
-CFG_SUBS=""
-CFG_AUDIO_FMT=""
-CHOOSE_DEFAULT=""
 
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
@@ -69,7 +63,7 @@ check_deps() {
 }
 
 choose() {
-  case "$1" in *Formato*) [ -n "$SIPHON_AUDIO" ] && { printf "%s" "$SIPHON_AUDIO"; return 0; } ;; *Contenedor*) [ -n "$SIPHON_CONTAINER" ] && { printf "%s" "$SIPHON_CONTAINER"; return 0; } ;; *Sub*) [ -n "$SIPHON_SUBS" ] && { printf "%s" "$SIPHON_SUBS"; return 0; } ;; *audio*) [ -n "$SIPHON_MODE" ] && { printf "%s" "$SIPHON_MODE"; return 0; } ;; esac
+  case "$1" in *Formato*) [ -n "$CFG_AUDIO_FMT" ] && { printf "%s" "$CFG_AUDIO_FMT"; return 0; } ;; *Contenedor*) [ -n "$CFG_CONTAINER" ] && { printf "%s" "$CFG_CONTAINER"; return 0; } ;; *Sub*) [ -n "$CFG_SUBS" ] && { printf "%s" "$CFG_SUBS"; return 0; } ;; *audio*) [ -n "$CFG_MODE" ] && { printf "%s" "$CFG_MODE"; return 0; } ;; esac
   local prompt="$1"; shift
   local opts=("$@")
   local n=${#opts[@]}
@@ -147,7 +141,7 @@ fetch_info() {
   local pid=$!
   _SIPHON_YTDLP_PID=$pid
 
-  local chars='|/-\'
+  local chars='|/-\\'
   local i=0
   while kill -0 "$pid" 2>/dev/null; do
     printf '\r    %s%s%s  Obteniendo información…' \
@@ -676,6 +670,7 @@ load_config() {
   done < "$f"
   case "$DEST" in
     "~") DEST="$HOME" ;;
+    # shellcheck disable=SC2088
     "~/"*) DEST="$HOME/${DEST#\~/}" ;;
   esac
 }
@@ -762,6 +757,8 @@ main() {
   echo
   ok "Hasta luego."
 }
+
+load_config
 
 case "${1:-}" in
   -h|--help)    usage; exit 0 ;;
