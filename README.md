@@ -166,6 +166,22 @@ siphon --batch urls.txt
 One URL per line. Blank lines and lines starting with `#` are ignored.
 
 
+### Configuration
+
+Siphon reads defaults from `~/.siphonrc`. Create one with `siphon --init`, inspect with `siphon --show-config`. Keys are optional. Precedence: env var > `~/.siphonrc` > runtime prompt.
+
+Example `~/.siphonrc`:
+
+```ini
+# ~/.siphonrc
+dest=~/Downloads
+mode=1          # 1=video, 2=audio
+quality=1080    # best | 1080 | 720 | 480
+container=1     # 1=mp4, 2=mkv
+subs=1          # 1=none, 2=es embed, ..., 7
+audio_format=2  # 1=mp3, 2=wav, 3=m4a
+```
+
 ### Environment variables
 
 Skip any prompt by setting an environment variable:
