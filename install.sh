@@ -3,6 +3,7 @@
 #   Local:  bash install.sh
 #   Remote: curl -fsSL https://raw.githubusercontent.com/storm2801/siphon/main/install.sh | bash
 
+# shellcheck disable=SC2016  # we write $HOME literally to the shell rc
 set -u
 
 VERSION="2.0.0"

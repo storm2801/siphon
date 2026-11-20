@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1003  # spinner chars false positive
+# shellcheck disable=SC1003,SC2016  # spinner chars and literal $HOME
 # ==============================================================
 #  Siphon — a clean terminal downloader
 #  Works with YouTube, Instagram, TikTok, Facebook, X,
@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="2.0.0"
+VERSION="2.0.1"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
