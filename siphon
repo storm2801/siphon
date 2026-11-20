@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -23,6 +23,7 @@ CFG_CONTAINER="${SIPHON_CONTAINER:-}"
 CFG_SUBS="${SIPHON_SUBS:-}"
 CFG_AUDIO_FMT="${SIPHON_AUDIO:-}"
 _SIPHON_YTDLP_PID=""
+_SIPHON_LAST_FILE=""
 
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
@@ -38,6 +39,21 @@ ok()   { printf '  %s✓%s  %s\n' "$C_GREEN" "$C_RESET" "$1"; }
 warn() { printf '  %s!%s  %s\n' "$C_YELLOW" "$C_RESET" "$1" >&2; }
 err()  { printf '  %s✗%s  %s\n' "$C_RED" "$C_RESET" "$1"; }
 info() { printf '  %s·%s  %s\n' "$C_GREY" "$C_RESET" "$1"; }
+
+notify() {
+  local title="$1" msg="$2"
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null || true
+  fi
+}
+
+log_download() {
+  local url="$1" file="$2"
+  local log="$HOME/.siphon_log"
+  local ts
+  ts="$(date '+%Y-%m-%d %H:%M:%S')"
+  printf '%s | %s | %s\n' "$ts" "$url" "$file" >> "$log" 2>/dev/null || true
+}
 
 on_interrupt() {
   trap - INT
@@ -237,6 +253,7 @@ run_download() {
   local url="$1"
   shift
   local -a dlargs=("$@")
+  _SIPHON_LAST_FILE=""
 
   rm -f "$FIFO"
   mkfifo "$FIFO" || { err "No pude crear el FIFO"; return 1; }
@@ -310,6 +327,9 @@ run_download() {
         last_pct=0
         current_bar=0
         ;;
+      __SIPHON_FILE__*)
+        _SIPHON_LAST_FILE="${line#__SIPHON_FILE__}"
+        ;;
       \[*|"")
         ;;
       *)
@@ -382,6 +402,8 @@ run_one() {
 
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
+         --no-overwrites \
+         --print "after_move:__SIPHON_FILE__%(filepath)s" \
          --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings )
 
@@ -533,6 +555,11 @@ run_one() {
   echo
   if [ "$rc" -eq 0 ]; then
     ok "Descarga completada"
+    if [ -n "$_SIPHON_LAST_FILE" ]; then
+      kv "Guardado en" "$_SIPHON_LAST_FILE"
+      log_download "$url" "$_SIPHON_LAST_FILE"
+      notify "Siphon" "Descarga completada: $(basename "$_SIPHON_LAST_FILE")"
+    fi
     open "$DEST" 2>/dev/null || true
   else
     err "yt-dlp terminó con código $rc"
@@ -582,6 +609,8 @@ batch_mode() {
 
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
+         --no-overwrites \
+         --print "after_move:__SIPHON_FILE__%(filepath)s" \
          --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings --no-playlist -o "%(title)s [%(id)s].%(ext)s" )
 
@@ -628,6 +657,9 @@ batch_mode() {
       "$C_BLUE" "$i" "$total" "$C_RESET" "$C_GREY" "$(trunc "$url" 60)" "$C_RESET"
     if run_download "$url" "${args[@]}"; then
       ok_count=$((ok_count + 1))
+      if [ -n "$_SIPHON_LAST_FILE" ]; then
+        log_download "$url" "$_SIPHON_LAST_FILE"
+      fi
     else
       fail_count=$((fail_count + 1))
       failed+=("$url")
@@ -652,9 +684,11 @@ batch_mode() {
 
   if [ "$fail_count" -eq 0 ]; then
     ok "Todas las descargas completadas"
+    notify "Siphon" "$ok_count vídeos descargados"
     open "$DEST" 2>/dev/null || true
   else
     warn "$fail_count de $total fallaron"
+    notify "Siphon" "$ok_count de $total completados"
   fi
 }
 
@@ -685,6 +719,40 @@ load_config() {
       audio_format) CFG_AUDIO_FMT="$v" ;;
     esac
   done < "$f"
+}
+
+update_siphon() {
+  local remote_url="https://raw.githubusercontent.com/storm2801/siphon/main/siphon"
+  local remote_version
+  info "Comprobando actualizaciones..."
+  remote_version="$(curl -fsSL "$remote_url" 2>/dev/null | grep -m1 '^VERSION=' | cut -d'"' -f2)"
+  if [ -z "$remote_version" ]; then
+    err "No pude contactar con GitHub"
+    return 1
+  fi
+  if [ "$remote_version" = "$VERSION" ]; then
+    ok "Ya tienes la última versión ($VERSION)"
+    return 0
+  fi
+  info "Nueva versión disponible: $remote_version (actual: $VERSION)"
+  if ! confirm "¿Actualizar ahora? [S/n]" "s"; then
+    warn "Cancelado."
+    return 0
+  fi
+  local target="$HOME/bin/siphon"
+  if [ ! -w "$(dirname "$target")" ]; then
+    err "Sin permisos para escribir en $(dirname "$target")"
+    return 1
+  fi
+  if curl -fsSL "$remote_url" -o "$target.tmp" 2>/dev/null && chmod +x "$target.tmp"; then
+    mv "$target.tmp" "$target"
+    ok "Actualizado a $remote_version"
+    info "Reinicia siphon para usar la nueva versión"
+  else
+    err "Error descargando la actualización"
+    rm -f "$target.tmp"
+    return 1
+  fi
 }
 
 init_config() {
@@ -735,6 +803,7 @@ Plataformas soportadas (vía yt-dlp):
 
 Uso:
   siphon                Inicia el descargador interactivo
+  siphon --update       Busca y aplica actualizaciones
   siphon --batch FILE   Descarga URLs de un archivo
   siphon --init         Crea ~/.siphonrc de ejemplo
   siphon --show-config  Muestra la configuracion efectiva
@@ -780,6 +849,7 @@ case "${1:-}" in
   --init)        init_config; exit $? ;;
   --show-config) show_config; exit 0 ;;
   -v|--version) printf 'siphon %s\n' "$VERSION"; exit 0 ;;
+  --update)      update_siphon; exit $? ;;
   --batch)
     [ -z "${2:-}" ] && { printf "Uso: siphon --batch <archivo>\n" >&2; exit 2; }
     check_deps; batch_mode "$2"; exit 0 ;;

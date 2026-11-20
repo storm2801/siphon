@@ -62,7 +62,7 @@ source ~/.zshrc
 ## Demo
 
 ```
-  Siphon  ·  multi-platform downloader  v1.5.0
+  Siphon  ·  multi-platform downloader  v1.6.0
   ─────────────────────────────────────────────
 
   Pega la URL del vídeo: [Enter = portapapeles]
