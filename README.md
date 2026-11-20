@@ -62,7 +62,7 @@ source ~/.zshrc
 ## Demo
 
 ```
-  Siphon  ·  multi-platform downloader  v1.6.0
+  Siphon  ·  multi-platform downloader  v1.6.1
   ─────────────────────────────────────────────
 
   Pega la URL del vídeo: [Enter = portapapeles]
@@ -128,9 +128,9 @@ Siphon is the fourth option: a thin, readable bash wrapper around `yt-dlp` that 
 
 ## Features
 
-| ↕▾ | ↕▾ |
+|  |  |
 |---|---|
-| −**Multi-platform** | YouTube, Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud, Dailymotion. |
+| -**Multi-platform** | YouTube, Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud, Dailymotion. |
 | **Real quality detection** | Queries the video first and only offers resolutions that actually exist. |
 | **Video or audio** | Full video in MP4/MKV, or just the audio as MP3, WAV, or M4A. |
 | **Subtitles** | Embed them or save as `.srt` sidecars. Spanish, English, or both. |
@@ -141,7 +141,7 @@ Siphon is the fourth option: a thin, readable bash wrapper around `yt-dlp` that 
 | **Env vars** | Set `SIPHON_MODE`, `SIPHON_QUALITY`, etc. to skip prompts. |
 | **Config file** | `~/.siphonrc` remembers your preferences. |
 | **CI validated** | Every push runs ShellCheck via GitHub Actions. |
-⚙
+
 
 ---
 
@@ -151,14 +151,14 @@ Optional. Skip this if you just want to download something.
 
 ### Flags
 
-| Flag ↕▾ | Description ↕▾ |
+| Flag  | Description  |
 |---|---|
-| −`--help`, `-h` | Show usage |
+| -`--help`, `-h` | Show usage |
 | `--version`, `-v` | Show version |
 | `--batch FILE` | Download every URL in FILE (one per line) |
 | `--init` | Create a sample `~/.siphonrc` |
 | `--show-config` | Show the effective configuration |
-⚙
+
 
 ### Batch mode
 
@@ -202,15 +202,31 @@ Skip any prompt:
 SIPHON_MODE=2 SIPHON_AUDIO=1 siphon
 ```
 
-| Variable ↕▾ | Values ↕▾ |
+| Variable  | Values  |
 |---|---|
-| −`SIPHON_DEST` | Any writable path |
+| -`SIPHON_DEST` | Any writable path |
 | `SIPHON_MODE` | `1` video, `2` audio |
 | `SIPHON_QUALITY` | `best`, `1080`, `720`, `480` |
 | `SIPHON_CONTAINER` | `1` mp4, `2` mkv |
 | `SIPHON_SUBS` | `1`–`7` |
 | `SIPHON_AUDIO` | `1` mp3, `2` wav, `3` m4a |
-⚙
+
+
+### Self-update
+
+Run `siphon --update` to check for and apply the latest version. Retries on unstable networks.
+
+### Download log
+
+Downloads are logged to `~/.siphon_log` as date | url | path.
+
+### Notifications
+
+On macOS, a system notification appears on completion.
+
+### Existing files
+
+Siphon never overwrites silently. Existing targets are skipped.
 
 ### Change the download folder
 
@@ -240,27 +256,27 @@ No dependencies beyond what `yt-dlp` already needs. No Python venv, no Node, no 
 
 ### Technologies
 
-| Layer ↕▾ | Tool ↕▾ | Role ↕▾ |
+| Layer  | Tool  | Role  |
 |---|---|---|
-| −Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
+| -Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
 | Media processing | [`ffmpeg`](https://ffmpeg.org/) | Merges streams, converts audio, embeds subtitles |
 | Metadata parsing | `python3` (stdlib only) | Parses `yt-dlp -J` JSON output |
 | UI / logic | `bash` 3.2+ | Menus, progress bar, control flow |
-⚙
+
 
 ---
 
 ## Troubleshooting
 
-| Symptom ↕▾ | Fix ↕▾ |
+| Symptom  | Fix  |
 |---|---|
-| −`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
+| -`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
 | "Format not available" or only 720p | `brew upgrade yt-dlp` |
 | Download stalls mid-way | Re-run `siphon`: `--continue` resumes |
 | `siphon: command not found` | `source ~/.zshrc` or open a fresh terminal |
 | Video imports to DaVinci with no audio | Choose **WAV** in the audio menu |
 | macOS blocks the script | System Settings → Privacy & Security → **Allow anyway** |
-⚙
+
 
 For anything else, open an [issue](https://github.com/storm2801/siphon/issues) with the full `yt-dlp` output.
 
@@ -343,102 +359,3 @@ If you find this useful, [give it a star](https://github.com/storm2801/siphon/st
 - Progress bar and menu patterns inspired by Unix tools that get out of the way.
 
 </BDS:create_file>
-<BDS:create_file fileName="install.sh">
-
-```bash
-#!/usr/bin/env bash
-# Siphon installer — works both from a local clone and via curl | bash.
-#
-#   From local clone:   bash install.sh
-#   From internet:      curl -fsSL https://raw.githubusercontent.com/storm2801/siphon/main/install.sh | bash
-
-set -u
-
-VERSION="1.5.0"
-REPO_RAW="https://raw.githubusercontent.com/storm2801/siphon/main/siphon"
-BIN_DIR="$HOME/bin"
-TARGET="$BIN_DIR/siphon"
-ZSHRC="$HOME/.zshrc"
-
-# Detect local source
-SCRIPT_DIR=""
-if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]:-}" ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
-fi
-LOCAL_SIPHON=""
-if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/siphon" ]; then
-    LOCAL_SIPHON="$SCRIPT_DIR/siphon"
-fi
-
-# Colors
-C_RESET=$'\033[0m'
-C_BOLD=$'\033[1m'
-C_BLUE=$'\033[38;5;33m'
-C_GREY=$'\033[38;5;245m'
-C_GREEN=$'\033[32m'
-C_RED=$'\033[31m'
-
-ok()   { printf '  %s✓%s  %s\n' "$C_GREEN" "$C_RESET" "$1"; }
-err()  { printf '  %s✗%s  %s\n' "$C_RED" "$C_RESET" "$1"; }
-info() { printf '  %s·%s  %s\n' "$C_GREY" "$C_RESET" "$1"; }
-
-printf '\n  %s%ssiphon%s  %s·  installer v%s%s\n\n' \
-    "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
-
-# 1. Dependencies
-printf '  Checking dependencies...\n'
-MISSING=0
-for p in yt-dlp ffmpeg; do
-    if command -v "$p" >/dev/null 2>&1; then ok "$p"
-    else err "$p (not found)"; MISSING=1; fi
-done
-
-if [ "$MISSING" = "1" ]; then
-    if command -v brew >/dev/null 2>&1; then
-        printf '\n  Install yt-dlp + ffmpeg via Homebrew? [Y/n] '
-        read -r answer
-        case "$answer" in
-            [nN]*) printf '  Install them manually and re-run this installer.\n'; exit 1 ;;
-            *) brew install yt-dlp ffmpeg || exit 1 ;;
-        esac
-    else
-        printf '\n  Homebrew not found. Install it first:\n\n'
-        printf '    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"\n\n'
-        exit 1
-    fi
-fi
-
-# 2. Install siphon
-printf '\n  Installing siphon...\n'
-mkdir -p "$BIN_DIR" || { err "Cannot create $BIN_DIR"; exit 1; }
-
-if [ -n "$LOCAL_SIPHON" ]; then
-    cp "$LOCAL_SIPHON" "$TARGET" || { err "Cannot copy siphon"; exit 1; }
-    info "from local source"
-else
-    if ! command -v curl >/dev/null 2>&1; then
-        err "curl not found and no local siphon to copy"
-        exit 1
-    fi
-    curl -fsSL "$REPO_RAW" -o "$TARGET" || { err "Download failed"; exit 1; }
-    info "downloaded from GitHub"
-fi
-chmod +x "$TARGET"
-ok "$TARGET"
-
-# 3. PATH
-printf '\n  Configuring PATH...\n'
-touch "$ZSHRC"
-if grep -q 'HOME/bin' "$ZSHRC"; then
-    info "\$HOME/bin already in ~/.zshrc"
-else
-    printf '\n# siphon\nexport PATH="$HOME/bin:$PATH"\n' >> "$ZSHRC"
-    ok "\$HOME/bin added to ~/.zshrc"
-fi
-
-# Done
-printf '\n  %s✓  Done.%s\n\n' "$C_GREEN" "$C_RESET"
-printf '  Open a new terminal (or run: %ssource ~/.zshrc%s)\n' "$C_BOLD" "$C_RESET"
-printf '  Then type:\n\n'
-printf '    %ssiphon%s\n\n' "$C_BOLD" "$C_RESET"
-
