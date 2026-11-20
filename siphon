@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="1.6.0"
+VERSION="1.6.1"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -723,11 +723,22 @@ load_config() {
 
 update_siphon() {
   local remote_url="https://raw.githubusercontent.com/storm2801/siphon/main/siphon"
-  local remote_version
+  local remote_version=""
   info "Comprobando actualizaciones..."
-  remote_version="$(curl -fsSL "$remote_url" 2>/dev/null | grep -m1 '^VERSION=' | cut -d'"' -f2)"
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    remote_version="$(curl -fsSL --retry 2 --retry-delay 1 --max-time 15 "$remote_url" 2>/dev/null | grep -m1 '^VERSION=' | cut -d'"' -f2)"
+    if [ -n "$remote_version" ]; then
+      break
+    fi
+    if [ "$attempt" -lt 5 ]; then
+      printf "  %s!%s  Intento %d/5 fallo, reintentando...\n" "$C_YELLOW" "$C_RESET" "$attempt"
+      sleep 3
+    fi
+  done
   if [ -z "$remote_version" ]; then
-    err "No pude contactar con GitHub"
+    err "No pude contactar con GitHub tras 5 intentos"
+    info "Comprueba tu conexion o intentalo mas tarde"
     return 1
   fi
   if [ "$remote_version" = "$VERSION" ]; then
