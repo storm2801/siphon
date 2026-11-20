@@ -359,3 +359,6 @@ If you find this useful, [give it a star](https://github.com/storm2801/siphon/st
 - Built on top of [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and [`ffmpeg`](https://ffmpeg.org/).
 - Terminal UI inspired by the simplicity of `git`, `tig`, and `lazygit`.
 - Progress bar and menu patterns inspired by Unix tools that get out of the way.
+
+**How do I uninstall it?**  
+Remove the binary: rm ~/bin/siphon. Then remove the "# siphon" block from your shell rc file (~/.zshrc on macOS, ~/.bashrc on Linux). Optionally delete ~/.siphonrc and ~/.siphon_log.
