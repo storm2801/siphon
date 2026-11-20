@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="1.6.1"
+VERSION="2.0.0"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -24,6 +24,32 @@ CFG_SUBS="${SIPHON_SUBS:-}"
 CFG_AUDIO_FMT="${SIPHON_AUDIO:-}"
 _SIPHON_YTDLP_PID=""
 _SIPHON_LAST_FILE=""
+
+OS="$(uname -s | tr "[:upper:]" "[:lower:]")"
+case "$OS" in
+  darwin*) OS="macos" ;;
+  linux*)  OS="linux"  ;;
+  *)       OS="unknown" ;;
+esac
+
+read_clipboard() {
+  case "$OS" in
+    macos) pbpaste 2>/dev/null ;;
+    linux)
+      if command -v wl-paste >/dev/null 2>&1; then wl-paste 2>/dev/null
+      elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -o 2>/dev/null
+      elif command -v xsel >/dev/null 2>&1; then xsel --clipboard --output 2>/dev/null
+      fi
+      ;;
+  esac
+}
+
+open_folder() {
+  case "$OS" in
+    macos) open "$1" 2>/dev/null || true ;;
+    linux) xdg-open "$1" 2>/dev/null || true ;;
+  esac
+}
 
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
@@ -42,9 +68,18 @@ info() { printf '  %s·%s  %s\n' "$C_GREY" "$C_RESET" "$1"; }
 
 notify() {
   local title="$1" msg="$2"
-  if command -v osascript >/dev/null 2>&1; then
-    osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null || true
-  fi
+  case "$OS" in
+    macos)
+      if command -v osascript >/dev/null 2>&1; then
+        osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null || true
+      fi
+      ;;
+    linux)
+      if command -v notify-send >/dev/null 2>&1; then
+        notify-send "$title" "$msg" 2>/dev/null || true
+      fi
+      ;;
+  esac
 }
 
 log_download() {
@@ -115,7 +150,7 @@ ask_url() {
 
     if [ -z "$url" ]; then
       local clip=""
-      clip="$(pbpaste 2>/dev/null | tr -d '[:space:]')"
+      clip="$(read_clipboard | tr -d '[:space:]')"
       case "$clip" in
         http://*|https://*)
           printf '    %s✓%s  Tomada del portapapeles: %s%s%s\n' \
@@ -560,7 +595,7 @@ run_one() {
       log_download "$url" "$_SIPHON_LAST_FILE"
       notify "Siphon" "Descarga completada: $(basename "$_SIPHON_LAST_FILE")"
     fi
-    open "$DEST" 2>/dev/null || true
+    open_folder "$DEST"
   else
     err "yt-dlp terminó con código $rc"
     printf '\n'
@@ -685,7 +720,7 @@ batch_mode() {
   if [ "$fail_count" -eq 0 ]; then
     ok "Todas las descargas completadas"
     notify "Siphon" "$ok_count vídeos descargados"
-    open "$DEST" 2>/dev/null || true
+    open_folder "$DEST"
   else
     warn "$fail_count de $total fallaron"
     notify "Siphon" "$ok_count de $total completados"

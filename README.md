@@ -8,7 +8,7 @@ A terminal downloader for macOS. Paste a link, pick what you want, watch it land
 
 [![Release](https://img.shields.io/github/v/release/storm2801/siphon?style=flat&label=version)](https://github.com/storm2801/siphon/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%2B%20Linux-lightgrey.svg)](https://www.apple.com/macos/)
 [![CI](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml)
 [![Stars](https://img.shields.io/github/stars/storm2801/siphon?style=flat)](https://github.com/storm2801/siphon/stargazers)
 
@@ -29,6 +29,8 @@ Pick one. The first is the easiest.
 3. A Terminal window opens, Siphon installs itself, and you're done
 
 You'll be asked for a URL. Paste it. Follow the prompts. Your file is in `~/Downloads`.
+
+> **On Linux:** `.command` files are macOS-only. Use Option 2 (one-line install) or Option 3 (from source).
 
 ### Option 2 — One-line install
 
@@ -53,7 +55,7 @@ source ~/.zshrc
 
 ### Requirements
 
-- **macOS** — Ventura, Sonoma, Sequoia, or any recent release
+- **macOS** — Ventura, Sonoma, Sequoia, or any recent release — **or Linux** (Debian/Ubuntu, Fedora, Arch, openSUSE)
 - [**Homebrew**](https://brew.sh/) — the installer uses it for the two dependencies
 - `yt-dlp` and `ffmpeg` — the installer handles them
 
@@ -62,7 +64,7 @@ source ~/.zshrc
 ## Demo
 
 ```
-  Siphon  ·  multi-platform downloader  v1.6.1
+  Siphon  ·  multi-platform downloader  v2.0.0
   ─────────────────────────────────────────────
 
   Pega la URL del vídeo: [Enter = portapapeles]
@@ -357,5 +359,3 @@ If you find this useful, [give it a star](https://github.com/storm2801/siphon/st
 - Built on top of [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and [`ffmpeg`](https://ffmpeg.org/).
 - Terminal UI inspired by the simplicity of `git`, `tig`, and `lazygit`.
 - Progress bar and menu patterns inspired by Unix tools that get out of the way.
-
-</BDS:create_file>
