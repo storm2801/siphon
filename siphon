@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="2.0.1"
+VERSION="2.0.2"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -438,6 +438,8 @@ run_one() {
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
          --no-overwrites \
+         --no-simulate \
+         --progress \
          --print "after_move:__SIPHON_FILE__%(filepath)s" \
          --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings )
@@ -645,6 +647,8 @@ batch_mode() {
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
          --no-overwrites \
+         --no-simulate \
+         --progress \
          --print "after_move:__SIPHON_FILE__%(filepath)s" \
          --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings --no-playlist -o "%(title)s [%(id)s].%(ext)s" )
