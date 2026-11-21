@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="2.0.5"
+VERSION="2.0.6"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -448,34 +448,13 @@ run_one() {
          --progress-template "download:__SIPHON_PROG__%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s" \
          --no-warnings )
 
+  local out_tpl
   if [ "$whole_playlist" = "1" ]; then
-    args+=( --yes-playlist -o "%(playlist_title)s/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" )
+    out_tpl="%(playlist_title)s/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s"
+    args+=( --yes-playlist )
   else
-    local out_tpl="%(title)s [%(id)s].%(ext)s"
-    local dry_args=( -P "$DEST" --no-warnings --print filename -o "$out_tpl" )
-    if [ "$mode" = "1" ]; then
-      dry_args+=( -f "$vf" --merge-output-format "$cont_ext" )
-    else
-      case "$af" in
-        1) dry_args+=( -x --audio-format mp3 ) ;;
-        2) dry_args+=( -x --audio-format wav ) ;;
-        3) dry_args+=( -x --audio-format m4a ) ;;
-      esac
-    fi
-    local target_path
-    target_path=$(yt-dlp "${dry_args[@]}" "$url" 2>/dev/null | head -n1)
-    if [ -n "$target_path" ] && [ -f "$target_path" ]; then
-      warn "El archivo ya existe: $(basename "$target_path")"
-      CHOOSE_DEFAULT="1"
-      local choice
-      choice=$(choose "¿Qué quieres hacer?" "Cancelar" "Descargar de nuevo y renombrar")
-      if [ "$choice" = "1" ]; then
-        return 0
-      else
-        out_tpl="${out_tpl%.*}_$(date +%Y%m%d_%H%M%S).${out_tpl##*.}"
-      fi
-    fi
-    args+=( --no-playlist -o "$out_tpl" )
+    out_tpl="%(title)s [%(id)s].%(ext)s"
+    args+=( --no-playlist )
   fi
 
   local label_alcance label_modo label_extra=""
@@ -595,6 +574,33 @@ run_one() {
     esac
     label_modo="Audio"
   fi
+
+  if [ "$whole_playlist" = "0" ]; then
+    local dry_args=( -P "$DEST" --no-warnings --print filename -o "$out_tpl" )
+    if [ "$mode" = "1" ]; then
+      dry_args+=( -f "$vf" --merge-output-format "$cont_ext" )
+    else
+      case "$af" in
+        1) dry_args+=( -x --audio-format mp3 ) ;;
+        2) dry_args+=( -x --audio-format wav ) ;;
+        3) dry_args+=( -x --audio-format m4a ) ;;
+      esac
+    fi
+    local target_path
+    target_path=$(yt-dlp "${dry_args[@]}" "$url" 2>/dev/null | head -n1)
+    if [ -n "$target_path" ] && [ -f "$target_path" ]; then
+      warn "El archivo ya existe: $(basename "$target_path")"
+      CHOOSE_DEFAULT="1"
+      local choice
+      choice=$(choose "¿Qué quieres hacer?" "Cancelar" "Descargar de nuevo y renombrar")
+      if [ "$choice" = "1" ]; then
+        return 0
+      else
+        out_tpl="${out_tpl%.*}_$(date +%Y%m%d_%H%M%S).${out_tpl##*.}"
+      fi
+    fi
+  fi
+  args+=( -o "$out_tpl" )
 
   echo
   rule
