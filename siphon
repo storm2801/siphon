@@ -13,7 +13,7 @@
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-VERSION="2.0.3"
+VERSION="2.0.4"
 DEST="${SIPHON_DEST:-$HOME/Downloads}"
 TMP_INFO="/tmp/siphon_info.$$.json"
 FIFO="/tmp/siphon_fifo.$$"
@@ -142,18 +142,23 @@ choose() {
 ask_url() {
   local url=""
   while :; do
-    printf '\n  %sPega la URL del vídeo:%s %s[Enter = portapapeles]%s\n' \
+    printf '
+  %sPega la URL del vídeo:%s %s[Enter = portapapeles, q = salir]%s
+' \
       "$C_BOLD" "$C_RESET" "$C_GREY" "$C_RESET" >&2
     printf '    %s>%s ' "$C_BLUE" "$C_RESET" >&2
     read -r url || exit 130
     url="$(printf '%s' "$url" | tr -d '[:space:]')"
 
+    case "$url" in q|Q) return 1 ;; esac
+
     if [ -z "$url" ]; then
       local clip=""
-      clip="$(read_clipboard | tr -d '[:space:]')"
+      clip="$(read_clipboard 2>/dev/null | tr -d '[:space:]')"
       case "$clip" in
         http://*|https://*)
-          printf '    %s✓%s  Tomada del portapapeles: %s%s%s\n' \
+          printf '    %s✓%s  Tomada del portapapeles: %s%s%s
+' \
             "$C_GREEN" "$C_RESET" "$C_GREY" "$(trunc "$clip" 55)" "$C_RESET" >&2
           printf '%s' "$clip"
           return 0
@@ -382,7 +387,7 @@ run_download() {
 
 run_one() {
   local url
-  url=$(ask_url)
+  url=$(ask_url) || return 1
 
   local platform
   platform=$(detect_platform "$url")
@@ -437,7 +442,6 @@ run_one() {
 
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
-         --no-overwrites \
          --no-simulate \
          --progress \
          --print "after_move:__SIPHON_FILE__%(filepath)s" \
@@ -447,7 +451,31 @@ run_one() {
   if [ "$whole_playlist" = "1" ]; then
     args+=( --yes-playlist -o "%(playlist_title)s/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" )
   else
-    args+=( --no-playlist -o "%(title)s [%(id)s].%(ext)s" )
+    local out_tpl="%(title)s [%(id)s].%(ext)s"
+    local dry_args=( -P "$DEST" --no-warnings --print filename -o "$out_tpl" )
+    if [ "$mode" = "1" ]; then
+      dry_args+=( -f "$vf" --merge-output-format "$cont_ext" )
+    else
+      case "$af" in
+        1) dry_args+=( -x --audio-format mp3 ) ;;
+        2) dry_args+=( -x --audio-format wav ) ;;
+        3) dry_args+=( -x --audio-format m4a ) ;;
+      esac
+    fi
+    local target_path
+    target_path=$(yt-dlp "${dry_args[@]}" "$url" 2>/dev/null | head -n1)
+    if [ -n "$target_path" ] && [ -f "$target_path" ]; then
+      warn "El archivo ya existe: $(basename "$target_path")"
+      CHOOSE_DEFAULT="1"
+      local choice
+      choice=$(choose "¿Qué quieres hacer?" "Cancelar" "Descargar de nuevo y renombrar")
+      if [ "$choice" = "1" ]; then
+        return 0
+      else
+        out_tpl="${out_tpl%.*}_$(date +%Y%m%d_%H%M%S).${out_tpl##*.}"
+      fi
+    fi
+    args+=( --no-playlist -o "$out_tpl" )
   fi
 
   local label_alcance label_modo label_extra=""
@@ -646,7 +674,6 @@ batch_mode() {
 
   local -a args
   args=( -P "$DEST" --continue --no-mtime --newline \
-         --no-overwrites \
          --no-simulate \
          --progress \
          --print "after_move:__SIPHON_FILE__%(filepath)s" \
@@ -872,18 +899,20 @@ EOF
 
 main() {
   clear 2>/dev/null || true
-  printf '\n'
-  printf '  %s%sSiphon%s  %s·  multi-platform downloader%s  %sv%s%s\n' \
+  printf '
+'
+  printf '  %s%sSiphon%s  %s·  multi-platform downloader%s  %sv%s%s
+' \
     "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
   rule
   check_deps
 
   while :; do
-    run_one
-    echo
-    if ! confirm "¿Descargar otra cosa? [s/N]" "n"; then break; fi
+    run_one || break
     clear 2>/dev/null || true
-    printf '\n  %s%sSiphon%s  %sv%s%s\n' \
+    printf '
+  %s%sSiphon%s  %sv%s%s
+' \
       "$C_BOLD" "$C_BLUE" "$C_RESET" "$C_GREY" "$VERSION" "$C_RESET"
     rule
   done
