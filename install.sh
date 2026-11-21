@@ -6,7 +6,7 @@
 # shellcheck disable=SC2016  # we write $HOME literally to the shell rc
 set -u
 
-VERSION="2.0.6"
+VERSION="2.0.7"
 REPO_RAW="https://raw.githubusercontent.com/storm2801/siphon/main/siphon"
 BIN_DIR="$HOME/bin"
 TARGET="$BIN_DIR/siphon"
