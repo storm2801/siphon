@@ -4,361 +4,92 @@
 
 **Draw the media you want, clean.**
 
-A terminal downloader for macOS. Paste a link, pick what you want, watch it land.
+A minimalist terminal downloader for macOS and Linux. Paste a link, pick what you want, and watch it land.
 
-[![Release](https://img.shields.io/github/v/release/storm2801/siphon?style=flat&label=version)](https://github.com/storm2801/siphon/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%2B%20Linux-lightgrey.svg)](https://www.apple.com/macos/)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey.svg)](#installation)
 [![CI](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/storm2801/siphon/actions/workflows/shellcheck.yml)
-[![Stars](https://img.shields.io/github/stars/storm2801/siphon?style=flat)](https://github.com/storm2801/siphon/stargazers)
-
-[Quick start](#quick-start) · [Demo](#demo) · [Advanced usage](#advanced-usage) · [Changelog](CHANGELOG.md)
 
 </div>
 
 ---
 
-## Quick start
+## Installation
 
-Pick one. The first is the easiest.
+### macOS
 
-### Option 1 — Double-click (no Terminal)
-
-1. Download **[Siphon.command](https://raw.githubusercontent.com/storm2801/siphon/main/Siphon.command)** to your Downloads folder
-2. Right-click → **Open** (macOS asks once, confirm)
-3. A Terminal window opens, Siphon installs itself, and you're done
-
-You'll be asked for a URL. Paste it. Follow the prompts. Your file is in `~/Downloads`.
-
-> **On Linux:** `.command` files are macOS-only. Use Option 2 (one-line install) or Option 3 (from source).
-
-### Option 2 — One-line install
-
-If you're comfortable with Terminal:
+Open Terminal and paste this single line to install Siphon and its dependencies:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/storm2801/siphon/main/install.sh | bash
-source ~/.zshrc
+```
+
+*(Alternatively, download the `Siphon.command` file from the repo, right-click -> Open, and it will install automatically without using the Terminal).*
+
+### Linux
+
+First, install the required dependencies for your distribution:
+
+**Ubuntu / Debian / Mint:**
+```bash
+sudo apt update && sudo apt install -y yt-dlp ffmpeg curl
+```
+
+**Fedora / RHEL:**
+```bash
+sudo dnf install -y yt-dlp ffmpeg curl
+```
+
+**Arch / Manjaro:**
+```bash
+sudo pacman -S --noconfirm yt-dlp ffmpeg curl
+```
+
+**openSUSE:**
+```bash
+sudo zypper install -y yt-dlp ffmpeg curl
+```
+
+Then, run the Siphon installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/storm2801/siphon/main/install.sh | bash
+```
+
+---
+
+## Usage
+
+Just type `siphon` in your terminal:
+
+```bash
 siphon
 ```
 
-Installs to `~/bin/siphon`, adds it to your `PATH`, done.
+It will ask you for a URL, if you want video or audio, the quality, and the format. Press **`q`** at any URL prompt to exit.
 
-### Option 3 — From source
+## What it does
 
+- **Multi-platform:** YouTube, Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud, and more.
+- **Real quality detection:** Checks the video first so you only see the resolutions that actually exist.
+- **Video or audio:** Download full videos in MP4/MKV, or extract audio as MP3, WAV, or M4A (perfect for DaVinci Resolve).
+- **Subtitles:** Download as `.srt` files or embed them directly into the video.
+- **Duplicate protection:** If the file already exists, it asks you if you want to cancel or download a renamed copy.
+- **Batch mode:** Have a list of URLs? Run `siphon --batch urls.txt` to download them all at once.
+- **Self-update:** Run `siphon --update` to get the latest version.
+- **Clipboard support:** Just press Enter at the URL prompt to paste the last link you copied.
+
+## Uninstall
+
+```bash
+rm ~/bin/siphon
 ```
-git clone https://github.com/storm2801/siphon.git
-cd siphon
-bash install.sh
-source ~/.zshrc
-```
-
-### Requirements
-
-- **macOS** — Ventura, Sonoma, Sequoia, or any recent release — **or Linux** (Debian/Ubuntu, Fedora, Arch, openSUSE)
-- [**Homebrew**](https://brew.sh/) — the installer uses it for the two dependencies
-- `yt-dlp` and `ffmpeg` — the installer handles them
-
----
-
-## Demo
-
-```
-  Siphon  ·  multi-platform downloader  v2.0.6
-  ─────────────────────────────────────────────
-
-  Pega la URL del vídeo: [Enter = portapapeles]
-    > https://youtu.be/dQw4w9WgXcQ
-
-  /  Obteniendo información…
-
-  ─────────────────────────────────────────────
-  Plataforma    YouTube
-  Título        Artist — Song Title
-  Duración      4m 12s
-  Calidades     2160p · 1440p · 1080p · 720p · 480p
-  ─────────────────────────────────────────────
-
-  ¿Vídeo o audio?
-    1)  Vídeo
-    2)  Audio
-    > 1
-
-  ¿Descargar ahora? [S/n] s
-
-    ▸ Vídeo  Artist — Song Title [dQw4w9WgXcQ].f401.mp4
-      [████████████████████████████████] 100%  ·  12.4 MB/s  ·  ETA 00:00
-    ▸ Audio  Artist — Song Title [dQw4w9WgXcQ].f140.m4a
-      [████████████████░░░░░░░░░░░░░░░░]  48%  ·  8.42 MB/s  ·  ETA 00:47
-    · Combinando pistas…
-
-  ✓  Descarga completada
-```
-
----
-
-## Supported platforms
-
-| Platform | Video | Audio | Notes |
-|---|---|---|---|
-| YouTube | ✓ | ✓ | Playlists, subtitles, live |
-| Instagram | ✓ | ✓ | Reels, posts, stories |
-| TikTok | ✓ | ✓ | Watermark-free available |
-| Facebook | ✓ | ✓ | Public videos |
-| X (Twitter) | ✓ | ✓ | Posts and threads |
-| Reddit | ✓ | ✓ | v.redd.it videos |
-| Vimeo | ✓ | ✓ | Public videos |
-| Twitch | ✓ | ✓ | VODs and clips |
-| SoundCloud | — | ✓ | Audio-only platform |
-| Dailymotion | ✓ | ✓ | Public videos |
-
-Siphon is a frontend for `yt-dlp`. Anything `yt-dlp` supports, Siphon supports. If it's not in the table, try it anyway — it will probably work.
-
----
-
-## Why Siphon
-
-Most downloaders are one of three things:
-
-- **Browser extensions** that break every other week, inject ads, or track you.
-- **GUI apps** that bundle a whole Electron runtime just to wrap `yt-dlp`.
-- **Raw `yt-dlp` commands** — powerful, but you have to remember `-f "bv*[height<=1080]+ba/b"` every time.
-
-Siphon is the fourth option: a thin, readable bash wrapper around `yt-dlp` that guides you through the choices with a clean UI and then gets out of the way.
-
----
-
-## Features
-
-|  |  |
-|---|---|
-| -**Multi-platform** | YouTube, Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud, Dailymotion. |
-| **Real quality detection** | Queries the video first and only offers resolutions that actually exist. |
-| **Video or audio** | Full video in MP4/MKV, or just the audio as MP3, WAV, or M4A. |
-| **Subtitles** | Embed them or save as `.srt` sidecars. Spanish, English, or both. |
-| **Playlists** | Paste a playlist URL and download everything with numbered filenames. |
-| **Clean progress bar** | One line per stream, fills smoothly. Speed and ETA included. |
-| **Clipboard** | Press Enter on an empty URL prompt and it pulls from your clipboard. |
-| **Batch mode** | `siphon --batch urls.txt` downloads a whole list. |
-| **Env vars** | Set `SIPHON_MODE`, `SIPHON_QUALITY`, etc. to skip prompts. |
-| **Config file** | `~/.siphonrc` remembers your preferences. |
-| **CI validated** | Every push runs ShellCheck via GitHub Actions. |
-
-
----
-
-## Advanced usage
-
-Optional. Skip this if you just want to download something.
-
-### Flags
-
-| Flag  | Description  |
-|---|---|
-| -`--help`, `-h` | Show usage |
-| `--version`, `-v` | Show version |
-| `--batch FILE` | Download every URL in FILE (one per line) |
-| `--init` | Create a sample `~/.siphonrc` |
-| `--show-config` | Show the effective configuration |
-
-
-### Batch mode
-
-Download every URL in a text file. One per line. Blank lines and lines starting with `#` are ignored.
-
-```
-siphon --batch urls.txt
-```
-
-Siphon asks format once and applies it to every URL. At the end, you get a summary with any failed URLs listed.
-
-### Configuration file
-
-Persist your preferences in `~/.siphonrc`:
-
-```
-siphon --init
-```
-
-Then uncomment and edit what you want:
-
-```
-# ~/.siphonrc
-dest=~/Downloads
-mode=1          # 1=video, 2=audio
-quality=1080    # best | 1080 | 720 | 480
-container=1     # 1=mp4, 2=mkv
-subs=1          # 1=none, 2=es embed, 3=es .srt, ... 7
-audio_format=2  # 1=mp3, 2=wav, 3=m4a
-```
-
-Inspect current config with `siphon --show-config`.
-
-**Precedence:** env var > `~/.siphonrc` > runtime prompt.
-
-### Environment variables
-
-Skip any prompt:
-
-```
-SIPHON_MODE=2 SIPHON_AUDIO=1 siphon
-```
-
-| Variable  | Values  |
-|---|---|
-| -`SIPHON_DEST` | Any writable path |
-| `SIPHON_MODE` | `1` video, `2` audio |
-| `SIPHON_QUALITY` | `best`, `1080`, `720`, `480` |
-| `SIPHON_CONTAINER` | `1` mp4, `2` mkv |
-| `SIPHON_SUBS` | `1`–`7` |
-| `SIPHON_AUDIO` | `1` mp3, `2` wav, `3` m4a |
-
-
-### Self-update
-
-Run `siphon --update` to check for and apply the latest version. Retries on unstable networks.
-
-### Download log
-
-Downloads are logged to `~/.siphon_log` as date | url | path.
-
-### Notifications
-
-On macOS, a system notification appears on completion.
-
-### Existing files
-
-Siphon never overwrites silently. Existing targets are skipped.
-
-### Change the download folder
-
-Default: `$HOME/Downloads`. Override with `SIPHON_DEST`:
-
-```
-SIPHON_DEST=~/Videos siphon
-```
-
-To make it permanent, add to `~/.zshrc`:
-
-```
-export SIPHON_DEST="$HOME/Videos"
-```
-
----
-
-## How it works
-
-Siphon is a thin bash wrapper around `yt-dlp`. It handles three things:
-
-1. **Asks questions** in a friendly way — menus, colored output, confirmations.
-2. **Translates your answers** into `yt-dlp` flags — `-f "bv*[height<=1080]+ba/b"`, `--audio-format mp3`, `--embed-subs`, etc.
-3. **Formats the output** — a clean progress bar instead of raw `yt-dlp` logging.
-
-No dependencies beyond what `yt-dlp` already needs. No Python venv, no Node, no package manager beyond Homebrew.
-
-### Technologies
-
-| Layer  | Tool  | Role  |
-|---|---|---|
-| -Download engine | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Extracts metadata, downloads streams |
-| Media processing | [`ffmpeg`](https://ffmpeg.org/) | Merges streams, converts audio, embeds subtitles |
-| Metadata parsing | `python3` (stdlib only) | Parses `yt-dlp -J` JSON output |
-| UI / logic | `bash` 3.2+ | Menus, progress bar, control flow |
-
-
----
-
-## Troubleshooting
-
-| Symptom  | Fix  |
-|---|---|
-| -`Sign in to confirm you're not a bot` | `yt-dlp --cookies-from-browser safari "URL"` (or `chrome`, `firefox`) |
-| "Format not available" or only 720p | `brew upgrade yt-dlp` |
-| Download stalls mid-way | Re-run `siphon`: `--continue` resumes |
-| `siphon: command not found` | `source ~/.zshrc` or open a fresh terminal |
-| Video imports to DaVinci with no audio | Choose **WAV** in the audio menu |
-| macOS blocks the script | System Settings → Privacy & Security → **Allow anyway** |
-
-
-For anything else, open an [issue](https://github.com/storm2801/siphon/issues) with the full `yt-dlp` output.
-
----
-
-## Roadmap
-
-- ☑  
-**v1.0** — YouTube support, quality detection, subtitle control
-- ☑  
-**v1.1** — Multi-platform: Instagram, TikTok, Facebook, X, Reddit, Vimeo, Twitch, SoundCloud
-- ☑  
-**v1.2** — Clipboard fallback, ETA and speed in progress bar
-- ☑  
-**v1.3** — Batch mode: `siphon --batch urls.txt`
-- ☑  
-**v1.4** — Env vars, config file, ShellCheck CI
-- ☑  
-**v1.5** — Double-click launcher, one-line installer, community files
-- □  
-**v2.0** — Linux support
-
-See CHANGELOG.md for details.
-
----
-
-## FAQ
-
-**Is this legal?**
-Siphon is a tool, not a service. Download only content you own, content under a free license, or content you have explicit permission to download. See Legal.
-
-**Why does it ask so many questions?**
-Because quality, format, and subtitles depend entirely on the video and what you plan to do with it. Siphon gets you exactly the file you want, not a 4K WebM you'll spend five minutes converting.
-
-**Can I script it?**
-Yes. Use `siphon --batch` for lists, env vars for one-off defaults, or `~/.siphonrc` for persistence.
-
-**Does it work on Linux?**
-Not officially tested, but the code is portable bash and only depends on `yt-dlp` + `ffmpeg`. It will probably work. PRs welcome.
-
-**Why is the UI in Spanish?**
-It's the author's language. A `SIPHON_LANG` environment variable is a reasonable v2 feature.
-
----
-
-## Contributing
-
-Issues and pull requests are welcome. See CONTRIBUTING.md for guidelines.
-
----
-
-## Legal
-
-Download only content you own, content under a free license, or content you have explicit permission to download. Downloading copyrighted material without authorization violates the platforms' Terms of Service.
-
-This project is a tool, not a service. What you do with it is your responsibility.
-
----
-
-## Author
-
-Built by **[storm2801](https://github.com/storm2801)** in 2026.
-
-Siphon is MIT-licensed. The original copyright notice and this attribution must remain in any fork or redistribution. See AUTHORS.md and LICENSE.
-
-If you find this useful, [give it a star](https://github.com/storm2801/siphon/stargazers) — it helps others find it.
+*(Then remove the `# siphon` block from your `~/.zshrc` on macOS or `~/.bashrc` on Linux).*
 
 ---
 
 ## License
 
-[MIT](LICENSE) © 2026 storm2801
+[MIT](LICENSE) © 2026 [storm2801](https://github.com/storm2801).
 
----
-
-## Credits
-
-- Built on top of [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and [`ffmpeg`](https://ffmpeg.org/).
-- Terminal UI inspired by the simplicity of `git`, `tig`, and `lazygit`.
-- Progress bar and menu patterns inspired by Unix tools that get out of the way.
-
-**How do I uninstall it?**  
-Remove the binary: rm ~/bin/siphon. Then remove the "# siphon" block from your shell rc file (~/.zshrc on macOS, ~/.bashrc on Linux). Optionally delete ~/.siphonrc and ~/.siphon_log.
+Built on top of [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://ffmpeg.org).
